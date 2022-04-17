@@ -16,21 +16,25 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract NexusProject is ERC721URIStorage, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
+
     Counters.Counter private currentTokenId;
 
-    // ---> Seating
+    // ~~~ ====> Seating
     uint256 public MAX_FOUNDING_CREW_SIZE;
     uint256 public MAX_CREW_SIZE;
 
-    // ---> Ticket prices
-    uint256 public constant FOUNDING_CREW_MINT_PRICE = 0.03 ether;
+    // ~~~ ====> Ticket prices
+    uint256 public constant FOUNDING_CREW_MINT_PRICE = 0.04 ether;
     uint256 public constant CREW_MINT_PRICE = 0.05 ether;
     uint256 public constant FOUNDING_CAPTAIN_MINT_PRICE = 0.07 ether;
     uint256 public constant CAPTAIN_MINT_PRICE = 0.08 ether;
 
-    // ---> Boarding phases
+    // ~~~ ====> Boarding phases
     bool public preboarding = false;
     bool public generalBoarding = false;
+
+    // ~~~ ====> Boarding qualifications
+    bytes32 public preboardingMerkleRoot;
 
     constructor(
         uint256 maxFoundingCrewSize,
@@ -42,7 +46,7 @@ contract NexusProject is ERC721URIStorage, Ownable, ReentrancyGuard {
         currentTokenId.increment();
     }
 
-    // ---> Modifiers
+    // ~~~ ====> Modifiers
     modifier crewSpotsAvailable() {
         require(
                 currentTokenId.current() <= MAX_CREW_SIZE,
@@ -97,7 +101,7 @@ contract NexusProject is ERC721URIStorage, Ownable, ReentrancyGuard {
         }
     }
 
-    // ---> Mint
+    // ~~~ ====> Mint
     function preMint(uint256 numToMint, string calldata jobTitle)
         public
         payable
@@ -126,7 +130,7 @@ contract NexusProject is ERC721URIStorage, Ownable, ReentrancyGuard {
         }
     }
 
-    // ---> Admin
+    // ~~~ ====> Admin
     function togglePreboarding(bool _isPreboardingOpen)
         external
         onlyOwner
@@ -139,6 +143,16 @@ contract NexusProject is ERC721URIStorage, Ownable, ReentrancyGuard {
         onlyOwner
     {
         generalBoarding = _isGeneralBoardingOpen;
+    }
+
+    function awardCaptainsLicense(address recipient, uint256 numToAward)
+        external
+        onlyOwner
+    {
+        for (uint i = 0; i < numToAward; i++) {
+            _safeMint(recipient, currentTokenId.current());
+            currentTokenId.increment();
+        }
     }
 
     function withdrawFunds()
