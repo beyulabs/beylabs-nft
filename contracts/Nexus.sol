@@ -14,14 +14,14 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract NexusProject is ERC721URIStorage, Ownable, ReentrancyGuard {
+contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
-
     Counters.Counter private currentTokenId;
 
     // ~~~ ====> Seating
     uint256 public MAX_FOUNDING_CREW_SIZE;
     uint256 public MAX_CREW_SIZE;
+    uint256 public MAX_TOKEN_PER_WALLET;
 
     // ~~~ ====> Ticket prices
     uint256 public constant FOUNDING_CREW_MINT_PRICE = 0.04 ether;
@@ -36,12 +36,17 @@ contract NexusProject is ERC721URIStorage, Ownable, ReentrancyGuard {
     // ~~~ ====> Boarding qualifications
     bytes32 public preboardingMerkleRoot;
 
+    address public withdrawlAddress;
+    mapping(address => uint256) addressMintCounts;
+
     constructor(
         uint256 maxFoundingCrewSize,
-        uint256 maxCrewSize
+        uint256 maxCrewSize,
+        uint256 maxTokensPerWallet
     ) ERC721("Nexus Project", "NXS") {
         MAX_FOUNDING_CREW_SIZE = maxFoundingCrewSize;
         MAX_CREW_SIZE = maxCrewSize;
+        MAX_TOKEN_PER_WALLET = maxTokensPerWallet;
 
         currentTokenId.increment();
     }
@@ -101,6 +106,16 @@ contract NexusProject is ERC721URIStorage, Ownable, ReentrancyGuard {
         }
     }
 
+    modifier doesNotExceedLimit(address _address, uint256 numToMint) {
+        uint256 currentCount = addressMintCounts[_address];
+
+        require(
+                currentCount + numToMint <= MAX_TOKEN_PER_WALLET,
+                "Above to per-wallet token limit"
+        );
+        _;
+    }
+
     // ~~~ ====> Mint
     function preMint(uint256 numToMint, string calldata jobTitle)
         public
@@ -109,9 +124,11 @@ contract NexusProject is ERC721URIStorage, Ownable, ReentrancyGuard {
         crewSpotsAvailable
         isPreboardingOpen
         canEnlistEarly(numToMint, jobTitle)
+        doesNotExceedLimit(msg.sender, numToMint)
     {
         for (uint i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
+            addressMintCounts[msg.sender] += 1;
             currentTokenId.increment();
         }
     }
@@ -123,9 +140,11 @@ contract NexusProject is ERC721URIStorage, Ownable, ReentrancyGuard {
         crewSpotsAvailable
         isGeneralBoardingOpen
         eligibleToEnlist(numToMint, jobTitle)
+        doesNotExceedLimit(msg.sender, numToMint)
     {
         for (uint i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
+            addressMintCounts[msg.sender] += 1;
             currentTokenId.increment();
         }
     }
@@ -153,6 +172,13 @@ contract NexusProject is ERC721URIStorage, Ownable, ReentrancyGuard {
             _safeMint(recipient, currentTokenId.current());
             currentTokenId.increment();
         }
+    }
+
+    function setWithdrawlAddress(address _address)
+        external
+        onlyOwner
+    {
+        withdrawlAddress = _address;
     }
 
     function withdrawFunds()
