@@ -24,10 +24,8 @@ contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
     uint256 public MAX_TOKEN_PER_WALLET;
 
     // ~~~ ====> Ticket prices
-    uint256 public constant FOUNDING_CREW_MINT_PRICE = 0.04 ether;
-    uint256 public constant CREW_MINT_PRICE = 0.05 ether;
-    uint256 public constant FOUNDING_CAPTAIN_MINT_PRICE = 0.07 ether;
-    uint256 public constant CAPTAIN_MINT_PRICE = 0.08 ether;
+    uint256 public constant FOUNDING_CREW_MINT_PRICE = 0.07 ether;
+    uint256 public constant CREW_MINT_PRICE = 0.09 ether;
 
     // ~~~ ====> Boarding phases
     bool public preboarding = false;
@@ -70,40 +68,20 @@ contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier canEnlistEarly(uint256 numToMint, string calldata jobTitle) {
-        if (
-            keccak256(abi.encodePacked(jobTitle)) == keccak256(abi.encodePacked("captain"))
-        ) {
-            require(
-                    msg.value == numToMint * FOUNDING_CAPTAIN_MINT_PRICE,
-                    "Not enough ETH!"
-            );
-            _;
-        } else {
-            require(
-                    msg.value == numToMint * FOUNDING_CREW_MINT_PRICE,
-                    "Not enough ETH!"
-            );
-            _;
-        }
+    modifier canEnlistEarly(uint256 numToMint) {
+        require(
+                msg.value == numToMint * FOUNDING_CREW_MINT_PRICE,
+                "Not enough ETH!"
+        );
+        _;
     }
 
-    modifier eligibleToEnlist(uint256 numToMint, string calldata jobTitle) {
-        if (
-            keccak256(abi.encodePacked(jobTitle)) == keccak256(abi.encodePacked("captain"))
-        ) {
-            require(
-                    msg.value == numToMint * CAPTAIN_MINT_PRICE,
-                    "Not enough ETH!"
-            );
-            _;
-        } else {
-            require(
-                    msg.value == numToMint * CREW_MINT_PRICE,
-                    "Not enough ETH!"
-            );
-            _;
-        }
+    modifier eligibleToEnlist(uint256 numToMint) {
+        require(
+                msg.value == numToMint * CREW_MINT_PRICE,
+                "Not enough ETH!"
+        );
+        _;
     }
 
     modifier doesNotExceedLimit(address _address, uint256 numToMint) {
@@ -123,7 +101,7 @@ contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
         nonReentrant
         crewSpotsAvailable
         isPreboardingOpen
-        canEnlistEarly(numToMint, jobTitle)
+        canEnlistEarly(numToMint)
         doesNotExceedLimit(msg.sender, numToMint)
     {
         for (uint i = 0; i < numToMint; i++) {
@@ -139,7 +117,7 @@ contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
         nonReentrant
         crewSpotsAvailable
         isGeneralBoardingOpen
-        eligibleToEnlist(numToMint, jobTitle)
+        eligibleToEnlist(numToMint)
         doesNotExceedLimit(msg.sender, numToMint)
     {
         for (uint i = 0; i < numToMint; i++) {
@@ -164,7 +142,7 @@ contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
         generalBoarding = _isGeneralBoardingOpen;
     }
 
-    function awardCaptainsLicense(address recipient, uint256 numToAward)
+    function giftToken(address recipient, uint256 numToAward)
         external
         onlyOwner
     {
@@ -174,11 +152,11 @@ contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
         }
     }
 
-    function setWithdrawlAddress(address _address)
+    function setWithdrawalAddress(address _address)
         external
         onlyOwner
     {
-        withdrawlAddress = _address;
+        withdrawalAddress = _address;
     }
 
     function withdrawFunds()
