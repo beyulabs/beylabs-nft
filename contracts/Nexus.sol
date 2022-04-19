@@ -34,7 +34,7 @@ contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
     // ~~~ ====> Boarding qualifications
     bytes32 public preboardingMerkleRoot;
 
-    address public withdrawlAddress;
+    address public withdrawalAddress;
     mapping(address => uint256) addressMintCounts;
 
     constructor(
