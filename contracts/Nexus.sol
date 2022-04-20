@@ -34,17 +34,20 @@ contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
     // ~~~ ====> Boarding qualifications
     bytes32 public preboardingMerkleRoot;
 
+    string private baseURI;
     address public withdrawalAddress;
     mapping(address => uint256) addressMintCounts;
 
     constructor(
         uint256 maxFoundingCrewSize,
         uint256 maxCrewSize,
-        uint256 maxTokensPerWallet
+        uint256 maxTokensPerWallet,
+        string memory _baseURI
     ) ERC721("Nexus Project", "NXS") {
         MAX_FOUNDING_CREW_SIZE = maxFoundingCrewSize;
         MAX_CREW_SIZE = maxCrewSize;
         MAX_TOKEN_PER_WALLET = maxTokensPerWallet;
+        baseURI = _baseURI;
 
         currentTokenId.increment();
     }
@@ -166,5 +169,12 @@ contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
         uint256 contractBalance = address(this).balance;
         payable(msg.sender).transfer(contractBalance);
 
+    }
+
+    function setBaseURI(string calldata _baseURI)
+        external
+        onlyOwner
+    {
+        baseURI = _baseURI;
     }
 }
