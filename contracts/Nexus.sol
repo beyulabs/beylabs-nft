@@ -16,6 +16,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+/**
+ * @title Nexus Project
+ * @author Ryan Harris
+ */
 contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
@@ -134,6 +138,10 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     }
 
     // ~~~ ====> Admin
+
+    /**
+     * @param _isPreboardingOpen Enables preMint
+     */
     function togglePreboarding(bool _isPreboardingOpen)
         external
         onlyOwner
@@ -141,6 +149,9 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         preboarding = _isPreboardingOpen;
     }
 
+    /**
+     * @param _isGeneralBoardingOpen Enables mint
+     */
     function toggleGeneralBoarding(bool _isGeneralBoardingOpen)
         external
         onlyOwner
@@ -148,6 +159,10 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         generalBoarding = _isGeneralBoardingOpen;
     }
 
+    /**
+     * @param recipient The address receiving the token(s)
+     * @param numToAward The number of tokens to gift
+     */
     function giftToken(address recipient, uint256 numToAward)
         external
         onlyOwner
@@ -158,6 +173,9 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         }
     }
 
+    /**
+     * @param _address The address contract funds are withdrawn to
+     */
     function setWithdrawalAddress(address _address)
         external
         onlyOwner
@@ -165,6 +183,9 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         withdrawalAddress = _address;
     }
 
+    /**
+     * @dev Transfers funds from contract to owner contract
+     */
     function withdrawFunds()
         external
         onlyOwner
@@ -174,6 +195,10 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
     }
 
+    /**
+     * @param _baseURI The base URI used for each token's metadata
+     * @dev Transfers funds from contract to owner contract
+     */
     function setBaseURI(string calldata _baseURI)
         external
         onlyOwner
@@ -181,12 +206,15 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         baseURI = _baseURI;
     }
 
+    /**
+     * @dev Unenforced royalty definition (https://eips.ethereum.org/EIPS/eip-2981)
+     */
     function royaltyInfo(uint256 tokenId, uint256 salePrice)
         external
         view
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        return (address(this), SafeMath.div(SafeMath.mul(salePrice * 5), 100));
+        return (address(this), SafeMath.div(SafeMath.mul(salePrice, 5), 100));
     }
 }
