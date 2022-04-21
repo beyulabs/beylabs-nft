@@ -11,10 +11,12 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
+contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
 
@@ -34,8 +36,9 @@ contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
     // ~~~ ====> Boarding qualifications
     bytes32 public preboardingMerkleRoot;
 
-    string private baseURI;
+    // ~~~ ====> Admin
     address public withdrawalAddress;
+    string private baseURI;
     mapping(address => uint256) addressMintCounts;
 
     constructor(
@@ -176,5 +179,14 @@ contract Nexus is ERC721URIStorage, Ownable, ReentrancyGuard {
         onlyOwner
     {
         baseURI = _baseURI;
+    }
+
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+        external
+        view
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        return (address(this), SafeMath.div(SafeMath.mul(salePrice * 5), 100));
     }
 }
