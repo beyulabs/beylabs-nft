@@ -39,4 +39,48 @@ describe("Nexus", function () {
 
     expect(baseURI).to.be.equal("ipfs://xyz/");
   });
+
+  it("toggles preboarding", async function () {
+    const Nexus = await ethers.getContractFactory("Nexus");
+    const nexus = await Nexus.deploy(
+        1000,
+        10000,
+        5,
+        "ipfs://xyz/"
+    );
+    await nexus.deployed();
+
+    let preboarding = await nexus.preboarding();
+    expect(preboarding).to.be.equal(false);
+
+    let togglePreboardingTxn = await nexus.togglePreboarding(true);
+    preboarding = await nexus.preboarding();
+    expect(preboarding).to.be.equal(true);
+
+    togglePreboardingTxn = await nexus.togglePreboarding(false);
+    preboarding = await nexus.preboarding();
+    expect(preboarding).to.be.equal(false);
+  });
+
+  it("toggles boarding", async function () {
+    const Nexus = await ethers.getContractFactory("Nexus");
+    const nexus = await Nexus.deploy(
+        1000,
+        10000,
+        5,
+        "ipfs://xyz/"
+    );
+    await nexus.deployed();
+
+    let generalBoarding = await nexus.generalBoarding();
+    expect(generalBoarding).to.be.equal(false);
+
+    let toggleBoardingTxn = await nexus.togglePreboarding(true);
+    generalBoarding = await nexus.preboarding();
+    expect(generalBoarding).to.be.equal(true);
+
+    toggleBoardingTxn = await nexus.togglePreboarding(false);
+    generalBoarding = await nexus.preboarding();
+    expect(generalBoarding).to.be.equal(false);
+  });
 });
