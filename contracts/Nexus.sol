@@ -28,6 +28,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     uint256 public MAX_FOUNDING_CREW_SIZE;
     uint256 public MAX_CREW_SIZE;
     uint256 public MAX_TOKEN_PER_WALLET;
+    string public BASE_URI;
 
     // ~~~ ====> Ticket prices
     uint256 public constant FOUNDING_CREW_MINT_PRICE = 0.07 ether;
@@ -42,7 +43,6 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
     // ~~~ ====> Admin
     address public withdrawalAddress;
-    string private baseURI;
     mapping(address => uint256) addressMintCounts;
 
     constructor(
@@ -54,7 +54,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         MAX_FOUNDING_CREW_SIZE = maxFoundingCrewSize;
         MAX_CREW_SIZE = maxCrewSize;
         MAX_TOKEN_PER_WALLET = maxTokensPerWallet;
-        baseURI = _baseURI;
+        BASE_URI = _baseURI;
 
         currentTokenId.increment();
     }
@@ -203,7 +203,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         external
         onlyOwner
     {
-        baseURI = _baseURI;
+        BASE_URI = _baseURI;
     }
 
     /**
@@ -215,6 +215,6 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        return (address(this), SafeMath.div(SafeMath.mul(salePrice, 5), 100));
+        return (address(this), SafeMath.mul(salePrice, SafeMath.div(7, 100)));
     }
 }

@@ -1,19 +1,26 @@
 import { expect } from "chai";
+import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 
-describe("Greeter", function () {
-  it("Should return the new greeting once it's changed", async function () {
-    const Greeter = await ethers.getContractFactory("Greeter");
-    const greeter = await Greeter.deploy("Hello, world!");
-    await greeter.deployed();
+describe("Nexus", function () {
+  it("properly deploys", async function () {
+    const Nexus = await ethers.getContractFactory("Nexus");
+    const nexus = await Nexus.deploy(
+        1000,
+        10000,
+        5,
+        "ipfs://xyz/"
+    );
+    await nexus.deployed();
 
-    expect(await greeter.greet()).to.equal("Hello, world!");
+    const preMintPrice = await nexus.FOUNDING_CREW_MINT_PRICE();
+    const mintPrice = await nexus.CREW_MINT_PRICE();
+    const maxPerWallet = await nexus.MAX_CREW_SIZE();
+    const baseURI = await nexus.BASE_URI();
 
-    const setGreetingTx = await greeter.setGreeting("Hola, mundo!");
-
-    // wait until the transaction is mined
-    await setGreetingTx.wait();
-
-    expect(await greeter.greet()).to.equal("Hola, mundo!");
+    expect(preMintPrice).to.be.instanceOf(BigNumber);
+    expect(mintPrice).to.be.instanceOf(BigNumber);
+    expect(maxPerWallet).to.be.instanceOf(BigNumber);
+    expect(baseURI).to.be.equal("ipfs://xyz/");
   });
 });
