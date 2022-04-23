@@ -83,4 +83,25 @@ describe("Nexus", function () {
     generalBoarding = await nexus.preboarding();
     expect(generalBoarding).to.be.equal(false);
   });
+
+  it("provides proper royalty info", async function () {
+    const Nexus = await ethers.getContractFactory("Nexus");
+    const nexus = await Nexus.deploy(
+        1000,
+        10000,
+        5,
+        "ipfs://xyz/"
+    );
+    await nexus.deployed();
+
+    const contractAddress = nexus.address;
+
+    let royaltyInfo = await nexus.royaltyInfo(
+        BigNumber.from("1"),
+        BigNumber.from("1000000000000000000")
+    );
+
+    expect(royaltyInfo[0]).to.be.equal(contractAddress);
+    console.log(royaltyInfo);
+  });
 });
