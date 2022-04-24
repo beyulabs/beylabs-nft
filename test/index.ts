@@ -169,6 +169,25 @@ describe("Nexus", function () {
 
   });
 
+  it("owner can set the baseURI", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+
+    const txn = await this.nexus.setBaseURI("ipfs://abcd-xyz");
+    expect(txn.to).to.be.equal(this.nexus.address);
+    expect(txn.has).to.not.be.equal(null);
+    expect(txn.confirmations).to.be.above(0);
+  });
+
+  it("non-owner can not set the baseURI", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+
+    await expectRevert.unspecified(
+      this.nexus.connect(addr1).setBaseURI("ipfs://abcd-xyz"),
+      "Ownable: caller is not the owner"
+    );
+
+  });
+
   it("enforces token supply limit", async function () {
     const Nexus = await ethers.getContractFactory("Nexus");
     const nexus = await this.Nexus.deploy(
