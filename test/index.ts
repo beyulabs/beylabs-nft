@@ -181,6 +181,26 @@ describe("Nexus", function () {
     );
   });
 
+  it("owner can gift tokens", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+
+    const txn = await this.nexus.giftToken(addr1.address, 1000);
+    expect(txn.to).to.be.equal(this.nexus.address);
+    expect(txn.from).to.be.equal(owner.address);
+    expect(txn.has).to.not.be.equal(null);
+    expect(txn.confirmations).to.be.above(0);
+  });
+
+  it("non-owner cannot gift tokens", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+
+    await expectRevert.unspecified(
+      this.nexus.connect(addr1).withdrawFunds(),
+      "Ownable: caller is not the owner"
+    );
+
+  });
+
   it("owner can set the withdrawl address", async function () {
     const [owner, addr1] = await ethers.getSigners();
 
