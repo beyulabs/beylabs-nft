@@ -150,6 +150,37 @@ describe("Nexus", function () {
     );
   });
 
+  it("owner can withdraw funds", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+
+    await this.nexus.toggleGeneralBoarding(true);
+    const generalboarding = await this.nexus.generalBoarding();
+    expect(generalboarding).to.be.equal(true);
+
+    let minttxn = await this.nexus.mint(2, "engineer", {
+      value: ethers.utils.parseEther("0.18")
+    });
+
+    expect(minttxn.value).to.be.equal(ethers.utils.parseEther("0.18"));
+    expect(minttxn.to).to.be.equal(this.nexus.address);
+
+    const withdrawTxn = await this.nexus.connect(owner).withdrawFunds();
+
+    expect(withdrawTxn.to).to.be.equal(this.nexus.address);
+    expect(withdrawTxn.from).to.be.equal(owner.address);
+    expect(withdrawTxn.has).to.not.be.equal(null);
+    expect(withdrawTxn.confirmations).to.be.above(0);
+  });
+
+  it("non-owner can not withdraw funds", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+
+    await expectRevert.unspecified(
+      this.nexus.connect(addr1).withdrawFunds(),
+      "Ownable: caller is not the owner"
+    );
+  });
+
   it("owner can set the withdrawl address", async function () {
     const [owner, addr1] = await ethers.getSigners();
 
