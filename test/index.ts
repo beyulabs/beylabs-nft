@@ -2,6 +2,8 @@ import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 
+const { expectRevert } = require("@openzeppelin/test-helpers");
+
 describe("Nexus", function () {
   before(async function () {
     this.Nexus = await ethers.getContractFactory("Nexus");
@@ -17,7 +19,7 @@ describe("Nexus", function () {
     await this.nexus.deployed();
   });
 
-  it("properly deploys", async function () {
+  it("contract state reflects initial arguments after deployment", async function () {
     const preMintPrice = await this.nexus.FOUNDING_CREW_MINT_PRICE();
     const mintPrice = await this.nexus.CREW_MINT_PRICE();
     const maxPerWallet = await this.nexus.MAX_TOKEN_PER_WALLET();
@@ -45,7 +47,7 @@ describe("Nexus", function () {
     expect(baseURI).to.be.equal("ipfs://xyz/");
   });
 
-  it("toggles preboarding", async function () {
+  it("allows toggling on/off of pre-sale", async function () {
     let preboarding = await this.nexus.preboarding();
     expect(preboarding).to.be.equal(false);
 
@@ -58,7 +60,7 @@ describe("Nexus", function () {
     expect(preboarding).to.be.equal(false);
   });
 
-  it("toggles boarding", async function () {
+  it("allows toggle on/off of general sale", async function () {
     let generalBoarding = await this.nexus.generalBoarding();
     expect(generalBoarding).to.be.equal(false);
 
@@ -71,7 +73,7 @@ describe("Nexus", function () {
     expect(generalBoarding).to.be.equal(false);
   });
 
-  it("provides proper royalty info", async function () {
+  it("returns proper royalty information", async function () {
     const contractAddress = this.nexus.address;
 
     const royaltyInfo = await this.nexus.royaltyInfo(
@@ -83,5 +85,47 @@ describe("Nexus", function () {
     expect(
         ethers.utils.formatEther(BigNumber.from(royaltyInfo[1]))
     ).to.be.equal("0.07");
+  });
+
+  it("pre-mint function enforces isPreboardingOpen modifier", async function () {
+    await expectRevert.unspecified(
+      this.nexus.preMint(1, "engineer"),
+      "We aren't boarding yet, space sailor!"
+    );
+  });
+
+  it("pre-mint succeeds when isPreboardingOpen is true", async function () {
+    await this.nexus.togglePreboarding(true);
+
+    const preboarding = await this.nexus.preboarding();
+    expect(preboarding).to.be.equal(true);
+
+    const mintTxn = await this.nexus.preMint(1, "engineer", {
+      value: ethers.utils.parseEther("0.07")
+    });
+
+    expect(mintTxn.value).to.be.equal(ethers.utils.parseEther("0.07"));
+    expect(mintTxn.to).to.be.equal(this.nexus.address);
+  });
+
+  it("mint enforces isGeneralBoardingOpen modifier", async function () {
+    await expectRevert.unspecified(
+      this.nexus.mint(1, "engineer"),
+      "General boarding starts soon!"
+    );
+  });
+
+  it("mint succeeds when isGeneralBoardingOpen is true", async function () {
+    await this.nexus.toggleGeneralBoarding(true);
+
+    const generalBoarding = await this.nexus.generalBoarding();
+    expect(generalBoarding).to.be.equal(true);
+
+    const mintTxn = await this.nexus.mint(1, "engineer", {
+      value: ethers.utils.parseEther("0.09")
+    });
+
+    expect(mintTxn.value).to.be.equal(ethers.utils.parseEther("0.09"));
+    expect(mintTxn.to).to.be.equal(this.nexus.address);
   });
 });
