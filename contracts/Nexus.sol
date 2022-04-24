@@ -99,7 +99,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
         require(
                 currentCount + numToMint <= MAX_TOKEN_PER_WALLET,
-                "Above to per-wallet token limit"
+                "Above the per-wallet token limit"
         );
         _;
     }

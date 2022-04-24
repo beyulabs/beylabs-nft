@@ -13,7 +13,7 @@ describe("Nexus", function () {
     this.nexus = await this.Nexus.deploy(
         1000,
         10000,
-        5,
+        3,
         "ipfs://xyz/"
     );
     await this.nexus.deployed();
@@ -36,7 +36,7 @@ describe("Nexus", function () {
     expect(ethers.utils.formatEther(mintPrice)).to.be.equal("0.09");
 
     expect(maxPerWallet).to.be.instanceOf(BigNumber);
-    expect(ethers.utils.formatUnits(maxPerWallet, 0)).to.be.equal("5");
+    expect(ethers.utils.formatUnits(maxPerWallet, 0)).to.be.equal("3");
 
     expect(foundingCrewSize).to.be.instanceOf(BigNumber);
     expect(ethers.utils.formatUnits(foundingCrewSize, 0)).to.be.equal("1000");
@@ -127,5 +127,26 @@ describe("Nexus", function () {
 
     expect(mintTxn.value).to.be.equal(ethers.utils.parseEther("0.09"));
     expect(mintTxn.to).to.be.equal(this.nexus.address);
+  });
+
+  it("enforce the per-wallet token limit", async function () {
+    await this.nexus.toggleGeneralBoarding(true);
+
+    const generalBoarding = await this.nexus.generalBoarding();
+    expect(generalBoarding).to.be.equal(true);
+
+    let mintTxn = await this.nexus.mint(2, "engineer", {
+      value: ethers.utils.parseEther("0.18")
+    });
+
+    expect(mintTxn.value).to.be.equal(ethers.utils.parseEther("0.18"));
+    expect(mintTxn.to).to.be.equal(this.nexus.address);
+
+    await expectRevert.unspecified(
+      this.nexus.mint(2, "engineer", {
+        value: ethers.utils.parseEther("0.18")
+      }),
+      "Above the per-wallet token limit"
+    );
   });
 });
