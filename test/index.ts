@@ -75,11 +75,13 @@ describe("Nexus", function () {
     const contractAddress = this.nexus.address;
 
     const royaltyInfo = await this.nexus.royaltyInfo(
-        BigNumber.from("1"),
-        BigNumber.from("1000000000000000000")
+      BigNumber.from("1"),
+      BigNumber.from("1000000000000000000")
     );
 
     expect(royaltyInfo[0]).to.be.equal(contractAddress);
-    console.log(royaltyInfo);
+    expect(
+        ethers.utils.formatEther(BigNumber.from(royaltyInfo[1]))
+    ).to.be.equal("0.07");
   });
 });

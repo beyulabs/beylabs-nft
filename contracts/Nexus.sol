@@ -8,7 +8,7 @@ pragma solidity >=0.8.0 <0.9.0;
 ██▐█▌▐█▄▄▌▪▐█·█▌▐█▄█▌▐█▄▪▐█
 ▀▀ █▪ ▀▀▀ •▀▀ ▀▀ ▀▀▀  ▀▀▀▀
 ====================== */
-
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
@@ -215,6 +215,6 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        return (address(this), SafeMath.mul(salePrice, SafeMath.div(7, 100)));
+        return (address(this), SafeMath.div(SafeMath.mul(salePrice, 7), 100));
     }
 }
