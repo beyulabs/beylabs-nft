@@ -149,4 +149,34 @@ describe("Nexus", function () {
       "Above the per-wallet token limit"
     );
   });
+
+  it("enforces token supply limit", async function () {
+    const Nexus = await ethers.getContractFactory("Nexus");
+    const nexus = await this.Nexus.deploy(
+        0,
+        10,
+        100,
+        "ipfs://xyz/"
+    );
+    await nexus.deployed();
+
+    await nexus.toggleGeneralBoarding(true);
+
+    const generalBoarding = await nexus.generalBoarding();
+    expect(generalBoarding).to.be.equal(true);
+
+    let mintTxn = await nexus.mint(10, "engineer", {
+      value: ethers.utils.parseEther("0.9")
+    });
+
+    expect(mintTxn.value).to.be.equal(ethers.utils.parseEther("0.9"));
+    expect(mintTxn.to).to.be.equal(nexus.address);
+
+    await expectRevert.unspecified(
+      nexus.mint(2, "engineer", {
+        value: ethers.utils.parseEther("0.18")
+      }),
+      "There are no more spots available on this expedition."
+    );
+  });
 });
