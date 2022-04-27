@@ -28,8 +28,8 @@ async function main() {
         const proof = tree.getProof(leaf)
         console.log('proof', proof);
 
-        console.log(tree.verify(proof, leaf, root));
-        console.log(tree.toString());
+        console.log('tree verified:', tree.verify(proof, leaf, root));
+        console.log('tree string', tree.toString());
     });
 }
 
