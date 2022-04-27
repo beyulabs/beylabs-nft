@@ -36,7 +36,10 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
     // ~~~ ====> Boarding phases
     bool public preboarding = false;
+    bytes32 public presaleMerkleRoot;
+
     bool public generalBoarding = false;
+    bytes32 public mintMerkleRoot;
 
     // ~~~ ====> Boarding qualifications
     bytes32 public preboardingMerkleRoot;
@@ -204,6 +207,26 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         onlyOwner
     {
         BASE_URI = _baseURI;
+    }
+
+    /**
+     * @param merkleRoot The root of the pre-sale merkle tree
+     */
+    function setPresaleMerkleRoot(bytes32 merkleRoot)
+        external
+        onlyOwner
+    {
+        presaleMerkleRoot = merkleRoot;
+    }
+
+    /**
+     * @param merkleRoot The root of the mint merkle tree
+     */
+    function setMintMerkleRoot(bytes32 merkleRoot)
+        external
+        ownerOnly
+    {
+        mintMerkleRoot = merkleRoot;
     }
 
     /**
