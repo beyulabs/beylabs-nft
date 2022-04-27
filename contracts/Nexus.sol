@@ -224,7 +224,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
      */
     function setMintMerkleRoot(bytes32 merkleRoot)
         external
-        ownerOnly
+        onlyOwner
     {
         mintMerkleRoot = merkleRoot;
     }
