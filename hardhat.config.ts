@@ -32,8 +32,10 @@ const config: HardhatUserConfig = {
     },
   },
   gasReporter: {
-    // enabled: process.env.REPORT_GAS !== undefined,
-    enabled: true,
+    enabled: process.env.REPORT_GAS !== undefined,
+    gasPriceApi: 'https://api.etherscan.io/api?module=proxy&action=eth_gasPrice',
+    token: 'ETH',
+    showTimeSpent: true,
     currency: "USD",
   },
   etherscan: {
