@@ -30,6 +30,8 @@ describe("Nexus", function () {
         1000,
         10000,
         3,
+        this.merkleRoot,
+        this.merkleRoot,
         "ipfs://xyz/"
     );
     await this.nexus.deployed();
@@ -288,12 +290,22 @@ describe("Nexus", function () {
   it.only("rejects mint from non-presale approved address", async function () {
       const badAddress = "0xabcdd6e51aad88F6F4ce6aB8827279cffFb91234";
       const badMerkleProof = this.tree.getHexProof(keccak256(badAddress));
-      console.log('badMerkleProof', badMerkleProof);
+
+      await expectRevert.unspecified(
+          this.nexus.connect(badAddress).preMint(1, badMerkleProof, "engineer"),
+        "You are not on the preboarding list!"
+      );
   });
 
   it.only("accepts mint from presale approved address", async function () {
       const goodAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
       const goodMerkleProof = this.tree.getHexProof(keccak256(goodAddress));
-      console.log('goodMerkleProof', goodMerkleProof);
+
+      const txn = await expect(
+          this.nexus.connect(goodAddress).mint(1, goodMerkleProof, "engineer")
+      );
+      expect(txn.to).to.be.equal(this.nexus.address);
+      expect(txn.has).to.not.be.equal(null);
+      // expect(txn.confirmations).to.be.above(0);
   });
 });

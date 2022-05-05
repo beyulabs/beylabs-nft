@@ -55,8 +55,8 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         uint256 maxFoundingCrewSize,
         uint256 maxCrewSize,
         uint256 maxTokensPerWallet,
-        bytes32[] _presaleMerkleRoot,
-        bytes32[] _mintMerkleRoot,
+        bytes32 _presaleMerkleRoot,
+        bytes32 _mintMerkleRoot,
         string memory _baseURI
     ) ERC721("Nexus Project", "NXS") {
         MAX_FOUNDING_CREW_SIZE = maxFoundingCrewSize;
@@ -89,7 +89,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier canEnlistEarly(uint256 numToMint, address _address, bytes32[] merkleProof) {
+    modifier canEnlistEarly(uint256 numToMint, address _address, bytes32[] calldata merkleProof) {
         require(
                 msg.value == numToMint * FOUNDING_CREW_MINT_PRICE,
                 "Not enough ETH!"
@@ -101,7 +101,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier eligibleToEnlist(uint256 numToMint, address _address, bytes32[] merkleProof) {
+    modifier eligibleToEnlist(uint256 numToMint, address _address, bytes32[] calldata merkleProof) {
         require(
                 msg.value == numToMint * CREW_MINT_PRICE,
                 "Not enough ETH!"
