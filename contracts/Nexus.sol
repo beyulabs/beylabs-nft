@@ -16,6 +16,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 /**
  * @title Nexus Project
@@ -88,18 +89,26 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier canEnlistEarly(uint256 numToMint, bytes32[] merkleProof) {
+    modifier canEnlistEarly(uint256 numToMint, address _address, bytes32[] merkleProof) {
         require(
                 msg.value == numToMint * FOUNDING_CREW_MINT_PRICE,
                 "Not enough ETH!"
         );
+        require(
+                MerkleProof.verify(merkleProof, presaleMerkleRoot, keccak256(abi.encodePacked(_address))),
+                "You are not on the preboarding list!"
+        );
         _;
     }
 
-    modifier eligibleToEnlist(uint256 numToMint, bytes32[] merkleProof) {
+    modifier eligibleToEnlist(uint256 numToMint, address _address, bytes32[] merkleProof) {
         require(
                 msg.value == numToMint * CREW_MINT_PRICE,
                 "Not enough ETH!"
+        );
+        require(
+                MerkleProof.verify(merkleProof, mintMerkleRoot, keccak256(abi.encodePacked(_address))),
+                "You are not on the boarding list!"
         );
         _;
     }
@@ -125,7 +134,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         nonReentrant
         crewSpotsAvailable
         isPreboardingOpen
-        canEnlistEarly(numToMint, merkleProof)
+        canEnlistEarly(numToMint, msg.sender, merkleProof)
         doesNotExceedLimit(msg.sender, numToMint)
     {
         for (uint i = 0; i < numToMint; i++) {
@@ -145,7 +154,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         nonReentrant
         crewSpotsAvailable
         isGeneralBoardingOpen
-        eligibleToEnlist(numToMint, merkleProof)
+        eligibleToEnlist(numToMint, msg.sender, merkleProof)
         doesNotExceedLimit(msg.sender, numToMint)
     {
         for (uint i = 0; i < numToMint; i++) {
