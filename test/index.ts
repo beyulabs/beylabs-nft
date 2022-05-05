@@ -4,9 +4,25 @@ import { ethers } from "hardhat";
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
 
+const { MerkleTree } = require('merkletreejs')
+// const SHA256 = require('crypto-js/sha256')
+const { keccak256 } = ethers.utils
+
 describe("Nexus", function () {
   before(async function () {
     this.Nexus = await ethers.getContractFactory("Nexus");
+
+    this.presaleAddresses = [
+      "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+      "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+      "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f",
+      "0xFABB0ac9d68B0B445fB7357272Ff202C5651694a",
+      "0xcd3B766CCDd6AE721141F452C550Ca635964ce71",
+    ];
+
+    this.leaves = this.presaleAddresses.map((x: string) => keccak256(x));
+    this.tree = new MerkleTree(this.leaves, keccak256);
+    this.mekleRoot = this.tree.getHexRoot();
   });
 
   beforeEach(async function () {
@@ -267,5 +283,17 @@ describe("Nexus", function () {
       }),
       "There are no more spots available on this expedition."
     );
+  });
+
+  it.only("rejects mint from non-presale approved address", async function () {
+      const badAddress = "0xabcdd6e51aad88F6F4ce6aB8827279cffFb91234";
+      const badMerkleProof = this.tree.getHexProof(keccak256(badAddress));
+      console.log('badMerkleProof', badMerkleProof);
+  });
+
+  it.only("accepts mint from presale approved address", async function () {
+      const goodAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+      const goodMerkleProof = this.tree.getHexProof(keccak256(goodAddress));
+      console.log('goodMerkleProof', goodMerkleProof);
   });
 });

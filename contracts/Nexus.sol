@@ -81,7 +81,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier canEnlistEarly(uint256 numToMint) {
+    modifier canEnlistEarly(uint256 numToMint, bytes32[] merkleProof) {
         require(
                 msg.value == numToMint * FOUNDING_CREW_MINT_PRICE,
                 "Not enough ETH!"
@@ -89,7 +89,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier eligibleToEnlist(uint256 numToMint) {
+    modifier eligibleToEnlist(uint256 numToMint, bytes32[] merkleProof) {
         require(
                 msg.value == numToMint * CREW_MINT_PRICE,
                 "Not enough ETH!"
@@ -108,13 +108,17 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     }
 
     // ~~~ ====> Mint
-    function preMint(uint256 numToMint, string calldata jobTitle)
+    function preMint(
+        uint256 numToMint,
+        bytes32[] calldata merkleProof,
+        string calldata jobTitle
+    )
         public
         payable
         nonReentrant
         crewSpotsAvailable
         isPreboardingOpen
-        canEnlistEarly(numToMint)
+        canEnlistEarly(numToMint, merkleProof)
         doesNotExceedLimit(msg.sender, numToMint)
     {
         for (uint i = 0; i < numToMint; i++) {
@@ -124,13 +128,17 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         }
     }
 
-    function mint(uint256 numToMint, string calldata jobTitle)
+    function mint(
+        uint256 numToMint,
+        bytes32[] calldata merkleProof,
+        string calldata jobTitle
+    )
         public
         payable
         nonReentrant
         crewSpotsAvailable
         isGeneralBoardingOpen
-        eligibleToEnlist(numToMint)
+        eligibleToEnlist(numToMint, merkleProof)
         doesNotExceedLimit(msg.sender, numToMint)
     {
         for (uint i = 0; i < numToMint; i++) {
