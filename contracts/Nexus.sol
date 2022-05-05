@@ -8,6 +8,7 @@ pragma solidity >=0.8.0 <0.9.0;
 ██▐█▌▐█▄▄▌▪▐█·█▌▐█▄█▌▐█▄▪▐█
 ▀▀ █▪ ▀▀▀ •▀▀ ▀▀ ▀▀▀  ▀▀▀▀
 ====================== */
+
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
@@ -20,6 +21,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
  * @title Nexus Project
  * @author Ryan Harris
  */
+
 contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
@@ -52,12 +54,17 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         uint256 maxFoundingCrewSize,
         uint256 maxCrewSize,
         uint256 maxTokensPerWallet,
+        bytes32[] _presaleMerkleRoot,
+        bytes32[] _mintMerkleRoot,
         string memory _baseURI
     ) ERC721("Nexus Project", "NXS") {
         MAX_FOUNDING_CREW_SIZE = maxFoundingCrewSize;
         MAX_CREW_SIZE = maxCrewSize;
         MAX_TOKEN_PER_WALLET = maxTokensPerWallet;
         BASE_URI = _baseURI;
+
+        presaleMerkleRoot = _presaleMerkleRoot;
+        mintMerkleRoot = _mintMerkleRoot;
 
         currentTokenId.increment();
     }
