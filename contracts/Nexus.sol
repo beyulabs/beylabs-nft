@@ -39,13 +39,10 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
     // ~~~ ====> Boarding phases
     bool public preboarding = false;
-    bytes32 public presaleMerkleRoot;
-
     bool public generalBoarding = false;
-    bytes32 public mintMerkleRoot;
 
     // ~~~ ====> Boarding qualifications
-    bytes32 public preboardingMerkleRoot;
+    bytes32 public presaleMerkleRoot;
 
     // ~~~ ====> Admin
     address public withdrawalAddress;
@@ -56,16 +53,13 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         uint256 maxCrewSize,
         uint256 maxTokensPerWallet,
         bytes32 _presaleMerkleRoot,
-        bytes32 _mintMerkleRoot,
         string memory _baseURI
     ) ERC721("Nexus Project", "NXS") {
         MAX_FOUNDING_CREW_SIZE = maxFoundingCrewSize;
         MAX_CREW_SIZE = maxCrewSize;
         MAX_TOKEN_PER_WALLET = maxTokensPerWallet;
         BASE_URI = _baseURI;
-
         presaleMerkleRoot = _presaleMerkleRoot;
-        mintMerkleRoot = _mintMerkleRoot;
 
         currentTokenId.increment();
     }
@@ -101,14 +95,10 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier eligibleToEnlist(uint256 numToMint, address _address, bytes32[] calldata merkleProof) {
+    modifier eligibleToEnlist(uint256 numToMint) {
         require(
                 msg.value == numToMint * CREW_MINT_PRICE,
                 "Not enough ETH!"
-        );
-        require(
-                MerkleProof.verify(merkleProof, mintMerkleRoot, keccak256(abi.encodePacked(_address))),
-                "You are not on the boarding list!"
         );
         _;
     }
@@ -146,7 +136,6 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
     function mint(
         uint256 numToMint,
-        bytes32[] calldata merkleProof,
         string calldata jobTitle
     )
         public
@@ -154,7 +143,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         nonReentrant
         crewSpotsAvailable
         isGeneralBoardingOpen
-        eligibleToEnlist(numToMint, msg.sender, merkleProof)
+        eligibleToEnlist(numToMint)
         doesNotExceedLimit(msg.sender, numToMint)
     {
         for (uint i = 0; i < numToMint; i++) {
@@ -241,16 +230,6 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         onlyOwner
     {
         presaleMerkleRoot = merkleRoot;
-    }
-
-    /**
-     * @param merkleRoot The root of the mint merkle tree
-     */
-    function setMintMerkleRoot(bytes32 merkleRoot)
-        external
-        onlyOwner
-    {
-        mintMerkleRoot = merkleRoot;
     }
 
     /**

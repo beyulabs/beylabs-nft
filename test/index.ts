@@ -31,7 +31,6 @@ describe("Nexus", function () {
         10000,
         3,
         this.merkleRoot,
-        this.merkleRoot,
         "ipfs://xyz/"
     );
     await this.nexus.deployed();
@@ -287,7 +286,7 @@ describe("Nexus", function () {
     );
   });
 
-  it.only("rejects mint from non-presale approved address", async function () {
+  it("rejects mint from non-presale approved address", async function () {
       const badAddress = "0xabcdd6e51aad88F6F4ce6aB8827279cffFb91234";
       const badMerkleProof = this.tree.getHexProof(keccak256(badAddress));
 
@@ -297,7 +296,7 @@ describe("Nexus", function () {
       );
   });
 
-  it.only("accepts mint from presale approved address", async function () {
+  it("accepts mint from presale approved address", async function () {
       const goodAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
       const goodMerkleProof = this.tree.getHexProof(keccak256(goodAddress));
 
@@ -306,6 +305,6 @@ describe("Nexus", function () {
       );
       expect(txn.to).to.be.equal(this.nexus.address);
       expect(txn.has).to.not.be.equal(null);
-      // expect(txn.confirmations).to.be.above(0);
+      expect(txn.confirmations).to.be.above(0);
   });
 });
