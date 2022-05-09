@@ -279,6 +279,18 @@ describe("Nexus", function () {
     );
   });
 
+  it("can update per-wallet token limit", async function () {
+    let maxPerWallet = await this.nexus.MAX_TOKEN_PER_WALLET();
+    expect(maxPerWallet).to.be.instanceOf(BigNumber);
+    expect(ethers.utils.formatUnits(maxPerWallet, 0)).to.be.equal("3");
+
+    await this.nexus.setPerWalletLimit(10)
+
+    maxPerWallet = await this.nexus.MAX_TOKEN_PER_WALLET();
+    expect(maxPerWallet).to.be.instanceOf(BigNumber);
+    expect(ethers.utils.formatUnits(maxPerWallet, 0)).to.be.equal("10");
+  })
+
   it.skip("rejects mint from non-presale approved address", async function () {
       const badAddress = "0xabcdd6e51aad88F6F4ce6aB8827279cffFb91234";
       const badMerkleProof = this.tree.getHexProof(keccak256(badAddress));

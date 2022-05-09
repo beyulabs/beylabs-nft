@@ -176,6 +176,16 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @param newLimit The amount of tokens a given address can mit
+     */
+    function setPerWalletLimit(uint newLimit)
+        external
+        onlyOwner
+    {
+        MAX_TOKEN_PER_WALLET = newLimit;
+    }
+
+    /**
      * @param recipient The address receiving the token(s)
      * @param numToAward The number of tokens to gift
      */
