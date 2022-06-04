@@ -43,7 +43,6 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
     // ~~~ ====> Boarding qualifications
     bytes32 public presaleMerkleRoot;
-    bytes32 public boardingMerkleRoot;
 
     // ~~~ ====> Admin
     address public withdrawalAddress;
@@ -54,7 +53,6 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         uint256 maxCrewSize,
         uint256 maxTokensPerWallet,
         bytes32 _presaleMerkleRoot,
-        bytes32 _boardingMerkleRoot,
         string memory _baseURI
     ) ERC721("Nexus Project", "NXS") {
         MAX_FOUNDING_CREW_SIZE = maxFoundingCrewSize;
@@ -62,7 +60,6 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         MAX_TOKEN_PER_WALLET = maxTokensPerWallet;
         BASE_URI = _baseURI;
         presaleMerkleRoot = _presaleMerkleRoot;
-        boardingMerkleRoot = _boardingMerkleRoot;
 
         currentTokenId.increment();
     }
@@ -106,20 +103,8 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier eligibleToEnlist(
-        uint256 numToMint,
-        address _address,
-        bytes32[] calldata merkleProof
-    ) {
+    modifier eligibleToEnlist(uint256 numToMint) {
         require(msg.value == numToMint * CREW_MINT_PRICE, "Not enough ETH!");
-        require(
-            MerkleProof.verify(
-                merkleProof,
-                boardingMerkleRoot,
-                keccak256(abi.encodePacked(_address))
-            ),
-            "Not on the general boarding list!"
-        );
         _;
     }
 
@@ -154,17 +139,13 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         }
     }
 
-    function mint(
-        uint256 numToMint,
-        bytes32[] calldata merkleProof,
-        string calldata jobTitle
-    )
+    function mint(uint256 numToMint, string calldata jobTitle)
         public
         payable
         nonReentrant
         crewSpotsAvailable
         isGeneralBoardingOpen
-        eligibleToEnlist(numToMint, msg.sender, merkleProof)
+        eligibleToEnlist(numToMint)
         doesNotExceedLimit(msg.sender, numToMint)
     {
         for (uint256 i = 0; i < numToMint; i++) {
