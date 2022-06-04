@@ -8,6 +8,7 @@ pragma solidity >=0.8.0 <0.9.0;
 ██▐█▌▐█▄▄▌▪▐█·█▌▐█▄█▌▐█▄▪▐█
 ▀▀ █▪ ▀▀▀ •▀▀ ▀▀ ▀▀▀  ▀▀▀▀
 ====================== */
+
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
@@ -15,11 +16,13 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 /**
  * @title Nexus Project
  * @author Ryan Harris
  */
+
 contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
@@ -36,13 +39,10 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
     // ~~~ ====> Boarding phases
     bool public preboarding = false;
-    bytes32 public presaleMerkleRoot;
-
     bool public generalBoarding = false;
-    bytes32 public mintMerkleRoot;
 
     // ~~~ ====> Boarding qualifications
-    bytes32 public preboardingMerkleRoot;
+    bytes32 public presaleMerkleRoot;
 
     // ~~~ ====> Admin
     address public withdrawalAddress;
@@ -52,12 +52,14 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         uint256 maxFoundingCrewSize,
         uint256 maxCrewSize,
         uint256 maxTokensPerWallet,
+        bytes32 _presaleMerkleRoot,
         string memory _baseURI
     ) ERC721("Nexus Project", "NXS") {
         MAX_FOUNDING_CREW_SIZE = maxFoundingCrewSize;
         MAX_CREW_SIZE = maxCrewSize;
         MAX_TOKEN_PER_WALLET = maxTokensPerWallet;
         BASE_URI = _baseURI;
+        presaleMerkleRoot = _presaleMerkleRoot;
 
         currentTokenId.increment();
     }
@@ -65,8 +67,8 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     // ~~~ ====> Modifiers
     modifier crewSpotsAvailable() {
         require(
-                currentTokenId.current() <= MAX_CREW_SIZE,
-                "There are no more spots available on this expedition."
+            currentTokenId.current() <= MAX_CREW_SIZE,
+            "There are no more spots available on this expedition."
         );
         _;
     }
@@ -76,24 +78,33 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier isGeneralBoardingOpen {
+    modifier isGeneralBoardingOpen() {
         require(generalBoarding, "General boarding starts soon!");
         _;
     }
 
-    modifier canEnlistEarly(uint256 numToMint) {
+    modifier canEnlistEarly(
+        uint256 numToMint,
+        address _address,
+        bytes32[] calldata merkleProof
+    ) {
         require(
-                msg.value == numToMint * FOUNDING_CREW_MINT_PRICE,
-                "Not enough ETH!"
+            msg.value == numToMint * FOUNDING_CREW_MINT_PRICE,
+            "Not enough ETH!"
+        );
+        require(
+            MerkleProof.verify(
+                merkleProof,
+                presaleMerkleRoot,
+                keccak256(abi.encodePacked(_address))
+            ),
+            "Not on the preboarding list!"
         );
         _;
     }
 
     modifier eligibleToEnlist(uint256 numToMint) {
-        require(
-                msg.value == numToMint * CREW_MINT_PRICE,
-                "Not enough ETH!"
-        );
+        require(msg.value == numToMint * CREW_MINT_PRICE, "Not enough ETH!");
         _;
     }
 
@@ -101,23 +112,27 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         uint256 currentCount = addressMintCounts[_address];
 
         require(
-                currentCount + numToMint <= MAX_TOKEN_PER_WALLET,
-                "Above the per-wallet token limit"
+            currentCount + numToMint <= MAX_TOKEN_PER_WALLET,
+            "Above the per-wallet token limit"
         );
         _;
     }
 
     // ~~~ ====> Mint
-    function preMint(uint256 numToMint, string calldata jobTitle)
+    function preMint(
+        uint256 numToMint,
+        bytes32[] calldata merkleProof,
+        string calldata jobTitle
+    )
         public
         payable
         nonReentrant
         crewSpotsAvailable
         isPreboardingOpen
-        canEnlistEarly(numToMint)
+        canEnlistEarly(numToMint, msg.sender, merkleProof)
         doesNotExceedLimit(msg.sender, numToMint)
     {
-        for (uint i = 0; i < numToMint; i++) {
+        for (uint256 i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
             addressMintCounts[msg.sender] += 1;
             currentTokenId.increment();
@@ -133,7 +148,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         eligibleToEnlist(numToMint)
         doesNotExceedLimit(msg.sender, numToMint)
     {
-        for (uint i = 0; i < numToMint; i++) {
+        for (uint256 i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
             addressMintCounts[msg.sender] += 1;
             currentTokenId.increment();
@@ -145,10 +160,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     /**
      * @param _isPreboardingOpen Enables preMint
      */
-    function togglePreboarding(bool _isPreboardingOpen)
-        external
-        onlyOwner
-    {
+    function togglePreboarding(bool _isPreboardingOpen) external onlyOwner {
         preboarding = _isPreboardingOpen;
     }
 
@@ -163,6 +175,13 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @param newLimit The amount of tokens a given address can mit
+     */
+    function setPerWalletLimit(uint256 newLimit) external onlyOwner {
+        MAX_TOKEN_PER_WALLET = newLimit;
+    }
+
+    /**
      * @param recipient The address receiving the token(s)
      * @param numToAward The number of tokens to gift
      */
@@ -170,7 +189,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         external
         onlyOwner
     {
-        for (uint i = 0; i < numToAward; i++) {
+        for (uint256 i = 0; i < numToAward; i++) {
             _safeMint(recipient, currentTokenId.current());
             currentTokenId.increment();
         }
@@ -179,54 +198,31 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     /**
      * @param _address The address contract funds are withdrawn to
      */
-    function setWithdrawalAddress(address _address)
-        external
-        onlyOwner
-    {
+    function setWithdrawalAddress(address _address) external onlyOwner {
         withdrawalAddress = _address;
     }
 
     /**
      * @dev Transfers funds from contract to owner contract
      */
-    function withdrawFunds()
-        external
-        onlyOwner
-    {
+    function withdrawFunds() external onlyOwner {
         uint256 contractBalance = address(this).balance;
-        payable(msg.sender).transfer(contractBalance);
-
+        payable(withdrawalAddress).transfer(contractBalance);
     }
 
     /**
      * @param _baseURI The base URI used for each token's metadata
      * @dev Transfers funds from contract to owner contract
      */
-    function setBaseURI(string calldata _baseURI)
-        external
-        onlyOwner
-    {
+    function setBaseURI(string calldata _baseURI) external onlyOwner {
         BASE_URI = _baseURI;
     }
 
     /**
      * @param merkleRoot The root of the pre-sale merkle tree
      */
-    function setPresaleMerkleRoot(bytes32 merkleRoot)
-        external
-        onlyOwner
-    {
+    function setPresaleMerkleRoot(bytes32 merkleRoot) external onlyOwner {
         presaleMerkleRoot = merkleRoot;
-    }
-
-    /**
-     * @param merkleRoot The root of the mint merkle tree
-     */
-    function setMintMerkleRoot(bytes32 merkleRoot)
-        external
-        onlyOwner
-    {
-        mintMerkleRoot = merkleRoot;
     }
 
     /**
