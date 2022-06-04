@@ -103,7 +103,7 @@ describe("Nexus", function () {
 
     await expectRevert.unspecified(
       this.nexus.connect(addr1).preMint(1, proof, "engineer"),
-      "We aren't boarding yet, space sailor!"
+      "Not boarding yet, space sailor!"
     );
   });
 
@@ -299,7 +299,7 @@ describe("Nexus", function () {
       this.nexus.connect(addr3).mint(11, "engineer", {
         value: ethers.utils.parseEther("0.99"),
       }),
-      "There are no more spots available on this expedition."
+      "No more spots!"
     );
   });
 

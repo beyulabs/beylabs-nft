@@ -46,7 +46,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
     // ~~~ ====> Admin
     address public withdrawalAddress;
-    mapping(address => uint256) addressMintCounts;
+    mapping(address => uint256) private addressMintCounts;
 
     constructor(
         uint256 maxFoundingCrewSize,
@@ -66,15 +66,12 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
     // ~~~ ====> Modifiers
     modifier crewSpotsAvailable() {
-        require(
-            currentTokenId.current() <= MAX_CREW_SIZE,
-            "There are no more spots available on this expedition."
-        );
+        require(currentTokenId.current() <= MAX_CREW_SIZE, "No more spots!");
         _;
     }
 
     modifier isPreboardingOpen() {
-        require(preboarding, "We aren't boarding yet, space sailor!");
+        require(preboarding, "Not boarding yet, space sailor!");
         _;
     }
 
