@@ -4,33 +4,39 @@ import { ethers } from "hardhat";
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
 
-const { MerkleTree } = require('merkletreejs');
+const { MerkleTree } = require("merkletreejs");
 const { keccak256 } = ethers.utils;
 
 describe("Nexus", function () {
   before(async function () {
     this.Nexus = await ethers.getContractFactory("Nexus");
 
-    this.presaleAddresses = [
-      "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-      "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
-      "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f",
-      "0xFABB0ac9d68B0B445fB7357272Ff202C5651694a",
-      "0xcd3B766CCDd6AE721141F452C550Ca635964ce71",
-    ];
+    const [owner, addr1, addr2] = await ethers.getSigners();
+
+    this.presaleAddresses = [owner.address, addr1.address];
+    this.generalSaleAddresses = [owner.address, addr2.address];
 
     this.leaves = this.presaleAddresses.map((x: string) => keccak256(x));
-    this.tree = new MerkleTree(this.leaves, keccak256);
-    this.merkleRoot = this.tree.getHexRoot();
+    this.tree = new MerkleTree(this.leaves, keccak256, { sort: true });
+    this.presaleMerkleRoot = this.tree.getHexRoot();
+
+    this.generalLeaves = this.generalSaleAddresses.map((x: string) =>
+      keccak256(x)
+    );
+    this.generalTree = new MerkleTree(this.generalLeaves, keccak256, {
+      sort: true,
+    });
+    this.generalMerkleRoot = this.generalTree.getHexRoot();
   });
 
   beforeEach(async function () {
     this.nexus = await this.Nexus.deploy(
-        1000,
-        10000,
-        3,
-        this.merkleRoot,
-        "ipfs://xyz/"
+      1000,
+      10000,
+      3,
+      this.presaleMerkleRoot,
+      this.generalMerkleRoot,
+      "ipfs://xyz/"
     );
     await this.nexus.deployed();
   });
@@ -65,11 +71,11 @@ describe("Nexus", function () {
     let preboarding = await this.nexus.preboarding();
     expect(preboarding).to.be.equal(false);
 
-    let togglePreboardingTxn = await this.nexus.togglePreboarding(true);
+    await this.nexus.togglePreboarding(true);
     preboarding = await this.nexus.preboarding();
     expect(preboarding).to.be.equal(true);
 
-    togglePreboardingTxn = await this.nexus.togglePreboarding(false);
+    await this.nexus.togglePreboarding(false);
     preboarding = await this.nexus.preboarding();
     expect(preboarding).to.be.equal(false);
   });
@@ -78,11 +84,11 @@ describe("Nexus", function () {
     let generalBoarding = await this.nexus.generalBoarding();
     expect(generalBoarding).to.be.equal(false);
 
-    let toggleBoardingTxn = await this.nexus.togglePreboarding(true);
+    await this.nexus.togglePreboarding(true);
     generalBoarding = await this.nexus.preboarding();
     expect(generalBoarding).to.be.equal(true);
 
-    toggleBoardingTxn = await this.nexus.togglePreboarding(false);
+    await this.nexus.togglePreboarding(false);
     generalBoarding = await this.nexus.preboarding();
     expect(generalBoarding).to.be.equal(false);
   });
@@ -97,7 +103,7 @@ describe("Nexus", function () {
 
     expect(royaltyInfo[0]).to.be.equal(contractAddress);
     expect(
-        ethers.utils.formatEther(BigNumber.from(royaltyInfo[1]))
+      ethers.utils.formatEther(BigNumber.from(royaltyInfo[1]))
     ).to.be.equal("0.07");
   });
 
@@ -106,79 +112,107 @@ describe("Nexus", function () {
     const proof = this.tree.getHexProof(keccak256(address));
 
     await expectRevert.unspecified(
-    this.nexus.preMint(1, proof, "engineer"),
+      this.nexus.preMint(1, proof, "engineer"),
       "We aren't boarding yet, space sailor!"
     );
   });
 
-  it.skip("pre-mint succeeds when isPreboardingOpen is true", async function () {
-    let togglePreboardingTxn = await this.nexus.togglePreboarding(true);
-    let preboarding = await this.nexus.preboarding();
+  it("pre-mint succeeds when isPreboardingOpen is true", async function () {
+    const [owner, addr1, addr2] = await ethers.getSigners();
+
+    await this.nexus.connect(owner).togglePreboarding(true);
+    const preboarding = await this.nexus.preboarding();
     expect(preboarding).to.be.equal(true);
 
-    const goodAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-    const goodMerkleProof = this.tree.getHexProof(keccak256(goodAddress));
+    const goodMerkleProof = this.tree.getHexProof(keccak256(addr1.address));
 
-    const mintTxn = await this.nexus.preMint(1, goodMerkleProof, "engineer", {
-      value: ethers.utils.parseEther("0.07")
-    });
+    const mintTxn = await this.nexus
+      .connect(addr1)
+      .preMint(1, goodMerkleProof, "engineer", {
+        value: ethers.utils.parseEther("0.07"),
+      });
 
     expect(mintTxn.value).to.be.equal(ethers.utils.parseEther("0.07"));
     expect(mintTxn.to).to.be.equal(this.nexus.address);
   });
 
   it("mint enforces isGeneralBoardingOpen modifier", async function () {
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const goodMerkleProof = this.generalTree.getHexProof(
+      keccak256(addr2.address)
+    );
+
     await expectRevert.unspecified(
-      this.nexus.mint(1, "engineer"),
+      this.nexus.connect(addr2).mint(1, goodMerkleProof, "engineer"),
       "General boarding starts soon!"
     );
   });
 
   it("mint succeeds when isGeneralBoardingOpen is true", async function () {
-    await this.nexus.toggleGeneralBoarding(true);
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const goodMerkleProof = this.generalTree.getHexProof(
+      keccak256(addr2.address)
+    );
+    await this.nexus.connect(owner).toggleGeneralBoarding(true);
 
     const generalBoarding = await this.nexus.generalBoarding();
     expect(generalBoarding).to.be.equal(true);
 
-    const mintTxn = await this.nexus.mint(1, "engineer", {
-      value: ethers.utils.parseEther("0.09")
-    });
+    const mintTxn = await this.nexus
+      .connect(addr2)
+      .mint(1, goodMerkleProof, "engineer", {
+        value: ethers.utils.parseEther("0.09"),
+      });
 
     expect(mintTxn.value).to.be.equal(ethers.utils.parseEther("0.09"));
     expect(mintTxn.to).to.be.equal(this.nexus.address);
   });
 
   it("enforce the per-wallet token limit", async function () {
-    await this.nexus.toggleGeneralBoarding(true);
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const goodMerkleProof = this.generalTree.getHexProof(
+      keccak256(addr2.address)
+    );
+
+    await this.nexus.connect(owner).toggleGeneralBoarding(true);
 
     const generalBoarding = await this.nexus.generalBoarding();
     expect(generalBoarding).to.be.equal(true);
 
-    let mintTxn = await this.nexus.mint(2, "engineer", {
-      value: ethers.utils.parseEther("0.18")
-    });
+    const mintTxn = await this.nexus
+      .connect(addr2)
+      .mint(2, goodMerkleProof, "engineer", {
+        value: ethers.utils.parseEther("0.18"),
+      });
 
     expect(mintTxn.value).to.be.equal(ethers.utils.parseEther("0.18"));
     expect(mintTxn.to).to.be.equal(this.nexus.address);
 
     await expectRevert.unspecified(
-      this.nexus.mint(2, "engineer", {
-        value: ethers.utils.parseEther("0.18")
+      this.nexus.connect(addr2).mint(2, goodMerkleProof, "engineer", {
+        value: ethers.utils.parseEther("0.18"),
       }),
       "Above the per-wallet token limit"
     );
   });
 
   it("owner can withdraw funds", async function () {
-    const [owner, addr1] = await ethers.getSigners();
+    const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+    const goodMerkleProof = this.generalTree.getHexProof(
+      keccak256(addr2.address)
+    );
 
-    await this.nexus.toggleGeneralBoarding(true);
+    await this.nexus.connect(owner).setWithdrawalAddress(addr3.address);
+
+    await this.nexus.connect(owner).toggleGeneralBoarding(true);
     const generalboarding = await this.nexus.generalBoarding();
     expect(generalboarding).to.be.equal(true);
 
-    let minttxn = await this.nexus.mint(2, "engineer", {
-      value: ethers.utils.parseEther("0.18")
-    });
+    const minttxn = await this.nexus
+      .connect(addr2)
+      .mint(2, goodMerkleProof, "engineer", {
+        value: ethers.utils.parseEther("0.18"),
+      });
 
     expect(minttxn.value).to.be.equal(ethers.utils.parseEther("0.18"));
     expect(minttxn.to).to.be.equal(this.nexus.address);
@@ -217,7 +251,6 @@ describe("Nexus", function () {
       this.nexus.connect(addr1).withdrawFunds(),
       "Ownable: caller is not the owner"
     );
-
   });
 
   it("owner can set the withdrawl address", async function () {
@@ -236,13 +269,12 @@ describe("Nexus", function () {
       this.nexus.connect(addr1).setWithdrawalAddress(addr2.address),
       "Ownable: caller is not the owner"
     );
-
   });
 
   it("owner can set the baseURI", async function () {
     const [owner, addr1] = await ethers.getSigners();
 
-    const txn = await this.nexus.setBaseURI("ipfs://abcd-xyz");
+    const txn = await this.nexus.connect(owner).setBaseURI("ipfs://abcd-xyz");
     expect(txn.to).to.be.equal(this.nexus.address);
     expect(txn.has).to.not.be.equal(null);
     expect(txn.confirmations).to.be.above(0);
@@ -255,25 +287,26 @@ describe("Nexus", function () {
       this.nexus.connect(addr1).setBaseURI("ipfs://abcd-xyz"),
       "Ownable: caller is not the owner"
     );
-
   });
 
-  it("enforces token supply limit", async function () {
-    await this.nexus.toggleGeneralBoarding(true);
+  it.skip("enforces token supply limit", async function () {
+    const [owner, addr1, addr2] = await ethers.getSigners();
+
+    await this.nexus.connect(owner).toggleGeneralBoarding(true);
 
     const generalBoarding = await this.nexus.generalBoarding();
     expect(generalBoarding).to.be.equal(true);
 
-    let mintTxn = await this.nexus.mint(2, "engineer", {
-      value: ethers.utils.parseEther("0.18")
+    const mintTxn = await this.nexus.connect(addr2).mint(2, "engineer", {
+      value: ethers.utils.parseEther("0.18"),
     });
 
     expect(mintTxn.value).to.be.equal(ethers.utils.parseEther("0.18"));
     expect(mintTxn.to).to.be.equal(this.nexus.address);
 
     await expectRevert.unspecified(
-      this.nexus.mint(2, "engineer", {
-        value: ethers.utils.parseEther("0.18")
+      this.nexus.connect(addr2).mint(2, "engineer", {
+        value: ethers.utils.parseEther("0.18"),
       }),
       "There are no more spots available on this expedition."
     );
@@ -284,33 +317,64 @@ describe("Nexus", function () {
     expect(maxPerWallet).to.be.instanceOf(BigNumber);
     expect(ethers.utils.formatUnits(maxPerWallet, 0)).to.be.equal("3");
 
-    await this.nexus.setPerWalletLimit(10)
+    await this.nexus.setPerWalletLimit(10);
 
     maxPerWallet = await this.nexus.MAX_TOKEN_PER_WALLET();
     expect(maxPerWallet).to.be.instanceOf(BigNumber);
     expect(ethers.utils.formatUnits(maxPerWallet, 0)).to.be.equal("10");
-  })
-
-  it.skip("rejects mint from non-presale approved address", async function () {
-      const badAddress = "0xabcdd6e51aad88F6F4ce6aB8827279cffFb91234";
-      const badMerkleProof = this.tree.getHexProof(keccak256(badAddress));
-
-      await expectRevert.unspecified(
-        this.nexus.connect(badAddress).preMint(1, badMerkleProof, "engineer"),
-        "You are not on the preboarding list!"
-      );
   });
 
-  it.skip("accepts mint from presale approved address", async function () {
-      const goodAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-      const goodMerkleProof = this.tree.getHexProof(keccak256(goodAddress));
+  it("enforces merkle check for preMint", async function () {
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const badMerkleProof = this.tree.getHexProof(keccak256(addr2.address));
+    const goodMerkleProof = this.tree.getHexProof(keccak256(addr1.address));
 
-      const txn = await expect(
-          this.nexus.connect(goodAddress).mint(1, goodMerkleProof, "engineer")
-      );
+    await this.nexus.connect(owner).togglePreboarding(true);
 
-      expect(txn.to).to.be.equal(this.nexus.address);
-      expect(txn.has).to.not.be.equal(null);
-      // expect(txn.confirmations).to.be.above(0);
+    await expectRevert.unspecified(
+      this.nexus.connect(addr2).preMint(1, badMerkleProof, "engineer", {
+        value: ethers.utils.parseEther("0.07"),
+      }),
+      "Not on the preboarding list!"
+    );
+
+    const goodTxn = await this.nexus
+      .connect(addr1)
+      .preMint(1, goodMerkleProof, "engineer", {
+        value: ethers.utils.parseEther("0.07"),
+      });
+
+    expect(goodTxn.to).to.be.equal(this.nexus.address);
+    expect(goodTxn.has).to.not.be.equal(null);
+    expect(goodTxn.confirmations).to.be.above(0);
+  });
+
+  it("enforces merkle check for mint", async function () {
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const badMerkleProof = this.generalTree.getHexProof(
+      keccak256(addr1.address)
+    );
+    const goodMerkleProof = this.generalTree.getHexProof(
+      keccak256(addr2.address)
+    );
+
+    await this.nexus.connect(owner).toggleGeneralBoarding(true);
+
+    await expectRevert.unspecified(
+      this.nexus.connect(addr1).mint(1, badMerkleProof, "engineer", {
+        value: ethers.utils.parseEther("0.09"),
+      }),
+      "Not on the preboarding list!"
+    );
+
+    const goodTxn = await this.nexus
+      .connect(addr2)
+      .mint(1, goodMerkleProof, "engineer", {
+        value: ethers.utils.parseEther("0.09"),
+      });
+
+    expect(goodTxn.to).to.be.equal(this.nexus.address);
+    expect(goodTxn.has).to.not.be.equal(null);
+    expect(goodTxn.confirmations).to.be.above(0);
   });
 });
