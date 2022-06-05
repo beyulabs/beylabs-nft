@@ -47,6 +47,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     // ~~~ ====> Admin
     address public withdrawalAddress;
     mapping(address => uint256) private addressMintCounts;
+    mapping(uint256 => string) public tokenTypeMapping;
 
     string[] private tokenTypes = [
         "architect",
@@ -56,7 +57,6 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         "mechanic",
         "merchant"
     ];
-    mapping(uint256 => string) public tokenTypeMapping;
 
     constructor(
         uint256 maxFoundingCrewSize,
@@ -107,6 +107,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
             ),
             "Not on the preboarding list!"
         );
+        require(!(addressMintCounts[_address] > 0), "Presale already claimed!");
         _;
     }
 
