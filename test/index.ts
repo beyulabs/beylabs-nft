@@ -102,7 +102,7 @@ describe("Nexus", function () {
     const proof = this.tree.getHexProof(keccak256(addr1.address));
 
     await expectRevert.unspecified(
-      this.nexus.connect(addr1).preMint(1, proof, "engineer"),
+      this.nexus.connect(addr1).preMint(1, proof, "mechanic"),
       "Not boarding yet, space sailor!"
     );
   });
@@ -118,7 +118,7 @@ describe("Nexus", function () {
 
     const mintTxn = await this.nexus
       .connect(addr1)
-      .preMint(1, goodMerkleProof, "engineer", {
+      .preMint(1, goodMerkleProof, "mechanic", {
         value: ethers.utils.parseEther("0.07"),
       });
 
@@ -130,7 +130,7 @@ describe("Nexus", function () {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
     await expectRevert.unspecified(
-      this.nexus.connect(addr2).mint(1, "engineer"),
+      this.nexus.connect(addr2).mint(1, "mechanic"),
       "General boarding starts soon!"
     );
   });
@@ -143,7 +143,7 @@ describe("Nexus", function () {
     const generalBoarding = await this.nexus.generalBoarding();
     expect(generalBoarding).to.be.equal(true);
 
-    const mintTxn = await this.nexus.connect(addr2).mint(1, "engineer", {
+    const mintTxn = await this.nexus.connect(addr2).mint(1, "mechanic", {
       value: ethers.utils.parseEther("0.09"),
     });
 
@@ -167,7 +167,7 @@ describe("Nexus", function () {
     expect(mintTxn.to).to.be.equal(this.nexus.address);
 
     await expectRevert.unspecified(
-      this.nexus.connect(addr2).mint(2, "engineer", {
+      this.nexus.connect(addr2).mint(2, "mechanic", {
         value: ethers.utils.parseEther("0.18"),
       }),
       "Above the per-wallet token limit"
@@ -183,7 +183,7 @@ describe("Nexus", function () {
     const generalboarding = await this.nexus.generalBoarding();
     expect(generalboarding).to.be.equal(true);
 
-    const minttxn = await this.nexus.connect(addr2).mint(2, "engineer", {
+    const minttxn = await this.nexus.connect(addr2).mint(2, "mechanic", {
       value: ethers.utils.parseEther("0.18"),
     });
 
@@ -323,7 +323,7 @@ describe("Nexus", function () {
     await this.nexus.togglePreboarding(true);
 
     await expectRevert.unspecified(
-      this.nexus.connect(addr2).preMint(1, badMerkleProof, "engineer", {
+      this.nexus.connect(addr2).preMint(1, badMerkleProof, "mechanic", {
         value: ethers.utils.parseEther("0.07"),
       }),
       "Not on the preboarding list!"
@@ -331,12 +331,63 @@ describe("Nexus", function () {
 
     const goodTxn = await this.nexus
       .connect(addr1)
-      .preMint(1, goodMerkleProof, "engineer", {
+      .preMint(1, goodMerkleProof, "mechanic", {
         value: ethers.utils.parseEther("0.07"),
       });
 
     expect(goodTxn.to).to.be.equal(this.nexus.address);
     expect(goodTxn.has).to.not.be.equal(null);
     expect(goodTxn.confirmations).to.be.above(0);
+  });
+
+  it("only accepts known types", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+    const preMintProof = this.tree.getHexProof(keccak256(addr1.address));
+
+    await this.nexus.togglePreboarding(true);
+    await this.nexus.setPerWalletLimit(10);
+
+    // Accepts proper types during preMint
+    const preMintTxnOne = await this.nexus
+      .connect(addr1)
+      .preMint(1, preMintProof, "mechanic", {
+        value: ethers.utils.parseEther("0.07"),
+      });
+    expect(preMintTxnOne.to).to.be.equal(this.nexus.address);
+    expect(preMintTxnOne.confirmations).to.be.above(0);
+
+    const preMintTxnTwo = await this.nexus
+      .connect(addr1)
+      .preMint(1, preMintProof, "artist", {
+        value: ethers.utils.parseEther("0.07"),
+      });
+    expect(preMintTxnTwo.to).to.be.equal(this.nexus.address);
+    expect(preMintTxnTwo.confirmations).to.be.above(0);
+
+    const preMintTxnThree = await this.nexus
+      .connect(addr1)
+      .preMint(1, preMintProof, "collector", {
+        value: ethers.utils.parseEther("0.07"),
+      });
+    expect(preMintTxnThree.to).to.be.equal(this.nexus.address);
+    expect(preMintTxnThree.confirmations).to.be.above(0);
+
+    // Rejects unknown types during preMint
+    await expectRevert.unspecified(
+      this.nexus.connect(addr1).preMint(1, preMintProof, "some character", {
+        value: ethers.utils.parseEther("0.07"),
+      }),
+      "Unknown character!"
+    );
+
+    for (let index = 1; index < 3; index++) {
+      const type = await this.nexus.tokenTypeMapping(index);
+
+      if (index === 1) {
+        expect(type).to.be.equal("mechanic");
+      } else if (index === 2) {
+        expect(type).to.be.equal("artist");
+      }
+    }
   });
 });

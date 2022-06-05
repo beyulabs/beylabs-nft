@@ -47,6 +47,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     // ~~~ ====> Admin
     address public withdrawalAddress;
     mapping(address => uint256) private addressMintCounts;
+    mapping(uint256 => string) public tokenTypeMapping;
 
     constructor(
         uint256 maxFoundingCrewSize,
@@ -115,6 +116,19 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
+    modifier isAcceptedType(string calldata jobTitle) {
+        require(
+            keccak256(abi.encodePacked(jobTitle)) ==
+                keccak256(abi.encodePacked("artist")) ||
+                keccak256(abi.encodePacked(jobTitle)) ==
+                keccak256(abi.encodePacked("collector")) ||
+                keccak256(abi.encodePacked(jobTitle)) ==
+                keccak256(abi.encodePacked("mechanic")),
+            "Unknown character!"
+        );
+        _;
+    }
+
     // ~~~ ====> Mint
     function preMint(
         uint256 numToMint,
@@ -128,10 +142,12 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         isPreboardingOpen
         canEnlistEarly(numToMint, msg.sender, merkleProof)
         doesNotExceedLimit(msg.sender, numToMint)
+        isAcceptedType(jobTitle)
     {
         for (uint256 i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
             addressMintCounts[msg.sender] += 1;
+            tokenTypeMapping[currentTokenId.current()] = jobTitle;
             currentTokenId.increment();
         }
     }
