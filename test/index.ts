@@ -383,10 +383,16 @@ describe("Nexus", function () {
     for (let index = 1; index < 3; index++) {
       const type = await this.nexus.tokenTypeMapping(index);
 
-      if (index === 1) {
-        expect(type).to.be.equal("mechanic");
-      } else if (index === 2) {
-        expect(type).to.be.equal("artist");
+      switch (index) {
+        case 1:
+          expect(type).to.be.equal("mechanic");
+          break;
+        case 2:
+          expect(type).to.be.equal("artist");
+          break;
+        case 3:
+          expect(type).to.be.equal("collector");
+          break;
       }
     }
   });

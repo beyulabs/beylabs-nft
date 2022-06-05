@@ -152,7 +152,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         }
     }
 
-    function mint(uint256 numToMint, string calldata jobTitle)
+    function mint(uint256 numToMint)
         public
         payable
         nonReentrant
