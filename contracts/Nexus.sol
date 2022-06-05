@@ -47,6 +47,15 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     // ~~~ ====> Admin
     address public withdrawalAddress;
     mapping(address => uint256) private addressMintCounts;
+
+    string[] private tokenTypes = [
+        "architect",
+        "captain",
+        "explorer",
+        "journalist",
+        "mechanic",
+        "merchant"
+    ];
     mapping(uint256 => string) public tokenTypeMapping;
 
     constructor(
@@ -117,15 +126,19 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     }
 
     modifier isAcceptedType(string calldata jobTitle) {
-        require(
-            keccak256(abi.encodePacked(jobTitle)) ==
-                keccak256(abi.encodePacked("artist")) ||
+        bool unknownType = true;
+
+        for (uint256 index = 0; index < tokenTypes.length; index++) {
+            if (
                 keccak256(abi.encodePacked(jobTitle)) ==
-                keccak256(abi.encodePacked("collector")) ||
-                keccak256(abi.encodePacked(jobTitle)) ==
-                keccak256(abi.encodePacked("mechanic")),
-            "Unknown character!"
-        );
+                keccak256(abi.encodePacked(tokenTypes[index]))
+            ) {
+                unknownType = false;
+                break;
+            }
+        }
+
+        require(unknownType != true, "Unknown character!");
         _;
     }
 

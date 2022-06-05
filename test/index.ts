@@ -11,6 +11,15 @@ describe("Nexus", function () {
   before(async function () {
     this.Nexus = await ethers.getContractFactory("Nexus");
 
+    this.tokenTypes = [
+      "architect",
+      "captain",
+      "explorer",
+      "journalist",
+      "mechanic",
+      "merchant",
+    ];
+
     const [owner, addr1] = await ethers.getSigners();
 
     this.presaleAddresses = [owner.address, addr1.address];
@@ -130,7 +139,7 @@ describe("Nexus", function () {
     const [owner, addr1, addr2] = await ethers.getSigners();
 
     await expectRevert.unspecified(
-      this.nexus.connect(addr2).mint(1, "mechanic"),
+      this.nexus.connect(addr2).mint(1),
       "General boarding starts soon!"
     );
   });
@@ -143,7 +152,7 @@ describe("Nexus", function () {
     const generalBoarding = await this.nexus.generalBoarding();
     expect(generalBoarding).to.be.equal(true);
 
-    const mintTxn = await this.nexus.connect(addr2).mint(1, "mechanic", {
+    const mintTxn = await this.nexus.connect(addr2).mint(1, {
       value: ethers.utils.parseEther("0.09"),
     });
 
@@ -159,7 +168,7 @@ describe("Nexus", function () {
     const generalBoarding = await this.nexus.generalBoarding();
     expect(generalBoarding).to.be.equal(true);
 
-    const mintTxn = await this.nexus.connect(addr2).mint(2, "engineer", {
+    const mintTxn = await this.nexus.connect(addr2).mint(2, {
       value: ethers.utils.parseEther("0.18"),
     });
 
@@ -167,7 +176,7 @@ describe("Nexus", function () {
     expect(mintTxn.to).to.be.equal(this.nexus.address);
 
     await expectRevert.unspecified(
-      this.nexus.connect(addr2).mint(2, "mechanic", {
+      this.nexus.connect(addr2).mint(2, {
         value: ethers.utils.parseEther("0.18"),
       }),
       "Above the per-wallet token limit"
@@ -183,7 +192,7 @@ describe("Nexus", function () {
     const generalboarding = await this.nexus.generalBoarding();
     expect(generalboarding).to.be.equal(true);
 
-    const minttxn = await this.nexus.connect(addr2).mint(2, "mechanic", {
+    const minttxn = await this.nexus.connect(addr2).mint(2, {
       value: ethers.utils.parseEther("0.18"),
     });
 
@@ -281,14 +290,14 @@ describe("Nexus", function () {
 
     const [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
-    const nineTxn = await nexusNFT.connect(addr1).mint(9, "engineer", {
+    const nineTxn = await nexusNFT.connect(addr1).mint(9, {
       value: ethers.utils.parseEther("0.81"),
     });
     expect(nineTxn.value).to.be.equal(ethers.utils.parseEther("0.81"));
     expect(nineTxn.to).to.be.equal(nexusNFT.address);
     expect(nineTxn.confirmations).to.be.above(0);
 
-    const tenTxn = await nexusNFT.connect(addr2).mint(10, "engineer", {
+    const tenTxn = await nexusNFT.connect(addr2).mint(10, {
       value: ethers.utils.parseEther("0.9"),
     });
     expect(tenTxn.value).to.be.equal(ethers.utils.parseEther("0.9"));
@@ -296,7 +305,7 @@ describe("Nexus", function () {
     expect(tenTxn.confirmations).to.be.above(0);
 
     await expectRevert.unspecified(
-      this.nexus.connect(addr3).mint(11, "engineer", {
+      this.nexus.connect(addr3).mint(11, {
         value: ethers.utils.parseEther("0.99"),
       }),
       "No more spots!"
@@ -348,29 +357,16 @@ describe("Nexus", function () {
     await this.nexus.setPerWalletLimit(10);
 
     // Accepts proper types during preMint
-    const preMintTxnOne = await this.nexus
-      .connect(addr1)
-      .preMint(1, preMintProof, "mechanic", {
-        value: ethers.utils.parseEther("0.07"),
-      });
-    expect(preMintTxnOne.to).to.be.equal(this.nexus.address);
-    expect(preMintTxnOne.confirmations).to.be.above(0);
 
-    const preMintTxnTwo = await this.nexus
-      .connect(addr1)
-      .preMint(1, preMintProof, "artist", {
-        value: ethers.utils.parseEther("0.07"),
-      });
-    expect(preMintTxnTwo.to).to.be.equal(this.nexus.address);
-    expect(preMintTxnTwo.confirmations).to.be.above(0);
-
-    const preMintTxnThree = await this.nexus
-      .connect(addr1)
-      .preMint(1, preMintProof, "collector", {
-        value: ethers.utils.parseEther("0.07"),
-      });
-    expect(preMintTxnThree.to).to.be.equal(this.nexus.address);
-    expect(preMintTxnThree.confirmations).to.be.above(0);
+    this.tokenTypes.forEach(async (character: string) => {
+      const txn = await this.nexus
+        .connect(addr1)
+        .preMint(1, preMintProof, character, {
+          value: ethers.utils.parseEther("0.07"),
+        });
+      expect(txn.to).to.be.equal(this.nexus.address);
+      expect(txn.confirmations).to.be.above(0);
+    });
 
     // Rejects unknown types during preMint
     await expectRevert.unspecified(
@@ -380,18 +376,27 @@ describe("Nexus", function () {
       "Unknown character!"
     );
 
-    for (let index = 1; index < 3; index++) {
+    for (let index = 1; index <= this.tokenTypes.length; index++) {
       const type = await this.nexus.tokenTypeMapping(index);
 
       switch (index) {
         case 1:
-          expect(type).to.be.equal("mechanic");
+          expect(type).to.be.equal("architect");
           break;
         case 2:
-          expect(type).to.be.equal("artist");
+          expect(type).to.be.equal("captain");
           break;
         case 3:
-          expect(type).to.be.equal("collector");
+          expect(type).to.be.equal("explorer");
+          break;
+        case 4:
+          expect(type).to.be.equal("journalist");
+          break;
+        case 5:
+          expect(type).to.be.equal("mechanic");
+          break;
+        case 6:
+          expect(type).to.be.equal("merchant");
           break;
       }
     }
