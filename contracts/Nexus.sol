@@ -46,7 +46,17 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
     // ~~~ ====> Admin
     address public withdrawalAddress;
-    mapping(address => uint256) addressMintCounts;
+    mapping(address => uint256) private addressMintCounts;
+
+    string[] private tokenTypes = [
+        "architect",
+        "captain",
+        "explorer",
+        "journalist",
+        "mechanic",
+        "merchant"
+    ];
+    mapping(uint256 => string) public tokenTypeMapping;
 
     constructor(
         uint256 maxFoundingCrewSize,
@@ -66,15 +76,12 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
 
     // ~~~ ====> Modifiers
     modifier crewSpotsAvailable() {
-        require(
-            currentTokenId.current() <= MAX_CREW_SIZE,
-            "There are no more spots available on this expedition."
-        );
+        require(currentTokenId.current() <= MAX_CREW_SIZE, "No more spots!");
         _;
     }
 
     modifier isPreboardingOpen() {
-        require(preboarding, "We aren't boarding yet, space sailor!");
+        require(preboarding, "Not boarding yet, space sailor!");
         _;
     }
 
@@ -118,6 +125,23 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
+    modifier isAcceptedType(string calldata jobTitle) {
+        bool unknownType = true;
+
+        for (uint256 index = 0; index < tokenTypes.length; index++) {
+            if (
+                keccak256(abi.encodePacked(jobTitle)) ==
+                keccak256(abi.encodePacked(tokenTypes[index]))
+            ) {
+                unknownType = false;
+                break;
+            }
+        }
+
+        require(unknownType != true, "Unknown character!");
+        _;
+    }
+
     // ~~~ ====> Mint
     function preMint(
         uint256 numToMint,
@@ -131,15 +155,17 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         isPreboardingOpen
         canEnlistEarly(numToMint, msg.sender, merkleProof)
         doesNotExceedLimit(msg.sender, numToMint)
+        isAcceptedType(jobTitle)
     {
         for (uint256 i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
             addressMintCounts[msg.sender] += 1;
+            tokenTypeMapping[currentTokenId.current()] = jobTitle;
             currentTokenId.increment();
         }
     }
 
-    function mint(uint256 numToMint, string calldata jobTitle)
+    function mint(uint256 numToMint)
         public
         payable
         nonReentrant
