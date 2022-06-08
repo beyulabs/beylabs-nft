@@ -84,14 +84,20 @@ describe("Nexus", function () {
   });
 
   it("returns proper royalty information", async function () {
-    const contractAddress = this.nexus.address;
+    const [owner, addr1] = await ethers.getSigners();
+
+    await this.nexus.toggleGeneralBoarding(true);
+
+    await this.nexus.connect(addr1).mint(1, {
+      value: ethers.utils.parseEther("0.09"),
+    });
 
     const royaltyInfo = await this.nexus.royaltyInfo(
       BigNumber.from("1"),
       BigNumber.from("1000000000000000000")
     );
 
-    expect(royaltyInfo[0]).to.be.equal(contractAddress);
+    expect(royaltyInfo[0]).to.be.equal(this.nexus.address);
     expect(
       ethers.utils.formatEther(BigNumber.from(royaltyInfo[1]))
     ).to.be.equal("0.07");
