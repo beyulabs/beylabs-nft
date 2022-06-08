@@ -26,7 +26,7 @@ describe("Nexus", function () {
       10000,
       3,
       this.presaleMerkleRoot,
-      "ipfs://xyz/"
+      "ipfs://xyz"
     );
     await this.nexus.deployed();
   });
@@ -54,7 +54,7 @@ describe("Nexus", function () {
     expect(crewSize).to.be.instanceOf(BigNumber);
     expect(ethers.utils.formatUnits(crewSize, 0)).to.be.equal("10000");
 
-    expect(baseURI).to.be.equal("ipfs://xyz/");
+    expect(baseURI).to.be.equal("ipfs://xyz");
   });
 
   it("allows toggling on/off of pre-sale", async function () {
@@ -270,7 +270,7 @@ describe("Nexus", function () {
       10,
       20,
       this.presaleMerkleRoot,
-      "ipfs://xyz/"
+      "ipfs://xyz"
     );
 
     await nexusNFT.deployed();
@@ -338,5 +338,24 @@ describe("Nexus", function () {
     expect(goodTxn.to).to.be.equal(this.nexus.address);
     expect(goodTxn.has).to.not.be.equal(null);
     expect(goodTxn.confirmations).to.be.above(0);
+  });
+
+  it("returns proper tokenURI before/after update", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+
+    await this.nexus.toggleGeneralBoarding(true);
+
+    const goodTxn = await this.nexus.connect(addr1).mint(1, {
+      value: ethers.utils.parseEther("0.09"),
+    });
+
+    expect(goodTxn.to).to.be.equal(this.nexus.address);
+    expect(goodTxn.confirmations).to.be.above(0);
+    expect(await this.nexus.balanceOf(addr1.address)).to.equal(1);
+    expect(await this.nexus.tokenURI(1)).to.equal("ipfs://xyz/1.json");
+
+    await this.nexus.setBaseURI("ipfs://abc");
+
+    expect(await this.nexus.tokenURI(1)).to.equal("ipfs://abc/1.json");
   });
 });
