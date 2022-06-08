@@ -9,14 +9,14 @@ pragma solidity >=0.8.0 <0.9.0;
 ▀▀ █▪ ▀▀▀ •▀▀ ▀▀ ▀▀▀  ▀▀▀▀
 ====================== */
 
-import "hardhat/console.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title Nexus Project
@@ -24,6 +24,7 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
  */
 
 contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
+    using Strings for uint256;
     using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
 
@@ -128,6 +129,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
             addressMintCounts[msg.sender] += 1;
+
             currentTokenId.increment();
         }
     }
@@ -144,11 +146,29 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
             addressMintCounts[msg.sender] += 1;
+
             currentTokenId.increment();
         }
     }
 
     // ~~~ ====> Admin
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        require(_exists(tokenId), "Nonexistent token!");
+
+        return
+            string(
+                abi.encodePacked(BASE_URI, "/", tokenId.toString(), ".json")
+            );
+    }
 
     /**
      * @param _isPreboardingOpen Enables preMint
@@ -227,6 +247,8 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         override
         returns (address receiver, uint256 royaltyAmount)
     {
+        require(_exists(tokenId), "Nonexistent token!");
+
         return (address(this), SafeMath.div(SafeMath.mul(salePrice, 7), 100));
     }
 }
