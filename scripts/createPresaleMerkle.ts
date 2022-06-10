@@ -21,6 +21,7 @@ async function main() {
 
     const root = tree.getRoot().toString("hex");
     console.log("root", root);
+    console.log("root", tree.getHexRoot());
 
     const leaf = SHA256(addresses[0]);
     console.log("leaf", leaf);

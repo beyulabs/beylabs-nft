@@ -9,15 +9,36 @@ import "solidity-coverage";
 
 dotenv.config();
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-  const accounts = await hre.ethers.getSigners();
+task("preboarding", "Opens/closes the pre-sale")
+  .addParam("open", "boolean")
+  .setAction(async (taskArgs, hre) => {});
 
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
+task("boarding", "Opens/closes the general sale")
+  .addParam("open", "boolean")
+  .setAction(async (taskArgs, hre) => {});
+
+task("wallet-limit", "Sets the per-wallet token limit")
+  .addParam("limit", "# of tokens a wallet can mint")
+  .setAction(async (taskArgs, hre) => {});
+
+task("gift", "Gifts token to given address")
+  .addParam("address", "address to send token(s) to")
+  .addParam("tokens", "# of tokens to gift")
+  .setAction(async (taskArgs, hre) => {});
+
+task("withdraw-address", "Sets the withdrawal address")
+  .addParam("address", "address receiving withdrawn funds")
+  .setAction(async (taskArgs, hre) => {});
+
+task("withdraw", "Gifts token to given address", async (taskArgs, hre) => {});
+
+task("base-uri", "Sets token base URI")
+  .addParam("uri", "base URI for token metadata")
+  .setAction(async (taskArgs, hre) => {});
+
+task("presale-list", "Sets token base URI")
+  .addParam("root", "hex string root of pre-sale merkle tree")
+  .setAction(async (taskArgs, hre) => {});
 
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
@@ -34,7 +55,7 @@ const config: HardhatUserConfig = {
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-    token: 'ETH',
+    token: "ETH",
     showTimeSpent: true,
     currency: "USD",
   },
