@@ -20,7 +20,6 @@ describe("Nexus", function () {
     const preMintPrice = await this.nexus.FOUNDING_CREW_MINT_PRICE();
     const mintPrice = await this.nexus.CREW_MINT_PRICE();
     const maxPerWallet = await this.nexus.MAX_TOKEN_PER_WALLET();
-    const foundingCrewSize = await this.nexus.MAX_FOUNDING_CREW_SIZE();
     const crewSize = await this.nexus.MAX_CREW_SIZE();
     const baseURI = await this.nexus.BASE_URI();
 
@@ -32,9 +31,6 @@ describe("Nexus", function () {
 
     expect(maxPerWallet).to.be.instanceOf(BigNumber);
     expect(ethers.utils.formatUnits(maxPerWallet, 0)).to.be.equal("3");
-
-    expect(foundingCrewSize).to.be.instanceOf(BigNumber);
-    expect(ethers.utils.formatUnits(foundingCrewSize, 0)).to.be.equal("1000");
 
     expect(crewSize).to.be.instanceOf(BigNumber);
     expect(ethers.utils.formatUnits(crewSize, 0)).to.be.equal("10000");
