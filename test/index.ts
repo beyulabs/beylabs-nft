@@ -86,10 +86,9 @@ describe("Nexus", function () {
 
   it("pre-mint function enforces isPreboardingOpen modifier", async function () {
     const [owner, addr1] = await ethers.getSigners();
-    const proof = this.tree.getHexProof(keccak256(addr1.address));
 
     await expectRevert.unspecified(
-      this.nexus.connect(addr1).preMint(1, proof),
+      this.nexus.connect(addr1).preMint(1),
       "Not boarding yet, space sailor!"
     );
   });
@@ -101,13 +100,9 @@ describe("Nexus", function () {
     const preboarding = await this.nexus.preboarding();
     expect(preboarding).to.be.equal(true);
 
-    const goodMerkleProof = this.tree.getHexProof(keccak256(addr1.address));
-
-    const mintTxn = await this.nexus
-      .connect(addr1)
-      .preMint(1, goodMerkleProof, {
-        value: ethers.utils.parseEther("0.07"),
-      });
+    const mintTxn = await this.nexus.connect(addr1).preMint(1, {
+      value: ethers.utils.parseEther("0.07"),
+    });
 
     expect(mintTxn.value).to.be.equal(ethers.utils.parseEther("0.07"));
     expect(mintTxn.to).to.be.equal(this.nexus.address);
@@ -251,14 +246,7 @@ describe("Nexus", function () {
 
   it("enforces token supply limit", async function () {
     const contract = await ethers.getContractFactory("Nexus");
-
-    const nexusNFT = await contract.deploy(
-      1,
-      10,
-      20,
-      this.presaleMerkleRoot,
-      "ipfs://xyz"
-    );
+    const nexusNFT = await contract.deploy(10, 20, "ipfs://xyz");
 
     await nexusNFT.deployed();
     await nexusNFT.toggleGeneralBoarding(true);
