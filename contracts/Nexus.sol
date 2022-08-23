@@ -29,7 +29,6 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     Counters.Counter private currentTokenId;
 
     // ~~~ ====> Seating
-    uint256 public MAX_FOUNDING_CREW_SIZE;
     uint256 public MAX_CREW_SIZE;
     uint256 public MAX_TOKEN_PER_WALLET;
     string public BASE_URI;
@@ -47,12 +46,10 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     mapping(address => uint256) private addressMintCounts;
 
     constructor(
-        uint256 maxFoundingCrewSize,
         uint256 maxCrewSize,
         uint256 maxTokensPerWallet,
         string memory _baseURI
     ) ERC721("Nexus Project", "NXS") {
-        MAX_FOUNDING_CREW_SIZE = maxFoundingCrewSize;
         MAX_CREW_SIZE = maxCrewSize;
         MAX_TOKEN_PER_WALLET = maxTokensPerWallet;
         BASE_URI = _baseURI;
@@ -69,11 +66,17 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
+    /**
+     * @dev Checks preboarding is open
+     */
     modifier isPreboardingOpen() {
         require(preboarding, "Not boarding yet, space sailor!");
         _;
     }
 
+    /**
+     * @dev Checks general boarding is open
+     */
     modifier isGeneralBoardingOpen() {
         require(generalBoarding, "General boarding starts soon!");
         _;
