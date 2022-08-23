@@ -4,30 +4,15 @@ import { ethers } from "hardhat";
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
 
-const { MerkleTree } = require("merkletreejs");
 const { keccak256 } = ethers.utils;
 
 describe("Nexus", function () {
   before(async function () {
     this.Nexus = await ethers.getContractFactory("Nexus");
-
-    const [owner, addr1, addr2, addr3] = await ethers.getSigners();
-
-    this.presaleAddresses = [owner.address, addr1.address, addr3.address];
-
-    this.leaves = this.presaleAddresses.map((x: string) => keccak256(x));
-    this.tree = new MerkleTree(this.leaves, keccak256, { sort: true });
-    this.presaleMerkleRoot = this.tree.getHexRoot();
   });
 
   beforeEach(async function () {
-    this.nexus = await this.Nexus.deploy(
-      1000,
-      10000,
-      3,
-      this.presaleMerkleRoot,
-      "ipfs://xyz"
-    );
+    this.nexus = await this.Nexus.deploy(1000, 10000, 3, "ipfs://xyz");
     await this.nexus.deployed();
   });
 
@@ -319,31 +304,6 @@ describe("Nexus", function () {
     maxPerWallet = await this.nexus.MAX_TOKEN_PER_WALLET();
     expect(maxPerWallet).to.be.instanceOf(BigNumber);
     expect(ethers.utils.formatUnits(maxPerWallet, 0)).to.be.equal("10");
-  });
-
-  it("enforces merkle check for preMint", async function () {
-    const [owner, addr1, addr2] = await ethers.getSigners();
-    const badMerkleProof = this.tree.getHexProof(keccak256(addr2.address));
-    const goodMerkleProof = this.tree.getHexProof(keccak256(addr1.address));
-
-    await this.nexus.togglePreboarding(true);
-
-    await expectRevert.unspecified(
-      this.nexus.connect(addr2).preMint(1, badMerkleProof, {
-        value: ethers.utils.parseEther("0.07"),
-      }),
-      "Not on the preboarding list!"
-    );
-
-    const goodTxn = await this.nexus
-      .connect(addr1)
-      .preMint(1, goodMerkleProof, {
-        value: ethers.utils.parseEther("0.07"),
-      });
-
-    expect(goodTxn.to).to.be.equal(this.nexus.address);
-    expect(goodTxn.has).to.not.be.equal(null);
-    expect(goodTxn.confirmations).to.be.above(0);
   });
 
   it("returns proper tokenURI before/after update", async function () {
