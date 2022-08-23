@@ -61,6 +61,9 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     }
 
     // ~~~ ====> Modifiers
+    /**
+     * @dev Ensures there are tokens left to mint
+     */
     modifier crewSpotsAvailable() {
         require(currentTokenId.current() <= MAX_CREW_SIZE, "No more spots!");
         _;
@@ -76,11 +79,17 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
+    /**
+     * @dev Checks for the correct amount of ETH
+     */
     modifier eligibleToEnlist(uint256 numToMint) {
         require(msg.value == numToMint * CREW_MINT_PRICE, "Not enough ETH!");
         _;
     }
 
+    /**
+     * @dev Enforces per-wallet token limit
+     */
     modifier doesNotExceedLimit(address _address, uint256 numToMint) {
         uint256 currentCount = addressMintCounts[_address];
 
@@ -91,8 +100,14 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
+    // ~~~ ====>
     // ~~~ ====> Mint
-    function preMint(uint256 numToMint, bytes32[] calldata merkleProof)
+    // ~~~ ====>
+
+    /**
+     * @dev Mints tokens for presale token holders or address
+     */
+    function preMint(uint256 numToMint)
         public
         payable
         nonReentrant
@@ -108,6 +123,9 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         }
     }
 
+    /**
+     * @dev Mints token during public mint
+     */
     function mint(uint256 numToMint)
         public
         payable
@@ -125,7 +143,10 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         }
     }
 
+    // ~~~ ====>
     // ~~~ ====> Admin
+    // ~~~ ====>
+
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
