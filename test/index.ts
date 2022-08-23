@@ -12,7 +12,7 @@ describe("Nexus", function () {
   });
 
   beforeEach(async function () {
-    this.nexus = await this.Nexus.deploy(1000, 10000, 3, "ipfs://xyz");
+    this.nexus = await this.Nexus.deploy(10000, 3, "ipfs://xyz");
     await this.nexus.deployed();
   });
 

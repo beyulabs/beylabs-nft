@@ -103,10 +103,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
-    // ~~~ ====>
     // ~~~ ====> Mint
-    // ~~~ ====>
-
     /**
      * @dev Mints tokens for presale token holders or address
      */
@@ -146,10 +143,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         }
     }
 
-    // ~~~ ====>
     // ~~~ ====> Admin
-    // ~~~ ====>
-
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
