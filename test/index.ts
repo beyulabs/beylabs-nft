@@ -4,8 +4,6 @@ import { ethers } from "hardhat";
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
 
-const { keccak256 } = ethers.utils;
-
 describe("Nexus", function () {
   before(async function () {
     this.Nexus = await ethers.getContractFactory("Nexus");
