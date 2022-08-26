@@ -19,11 +19,11 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
- * @title Nexus Project
+ * @title Nexus Voyagers
  * @author Ryan Harris
  */
 
-contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
+contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     using Strings for uint256;
     using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
@@ -49,7 +49,7 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         uint256 maxCrewSize,
         uint256 maxTokensPerWallet,
         string memory _baseURI
-    ) ERC721("Nexus Project", "NXS") {
+    ) ERC721("Nexus Voyagers", "VOYAGER") {
         MAX_CREW_SIZE = maxCrewSize;
         MAX_TOKEN_PER_WALLET = maxTokensPerWallet;
         BASE_URI = _baseURI;
