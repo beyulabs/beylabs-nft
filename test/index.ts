@@ -4,13 +4,13 @@ import { ethers } from "hardhat";
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
 
-describe("Nexus", function () {
+describe("NexusVoyagers", function () {
   before(async function () {
-    this.Nexus = await ethers.getContractFactory("Nexus");
+    this.NexusVoyagers = await ethers.getContractFactory("NexusVoyagers");
   });
 
   beforeEach(async function () {
-    this.nexus = await this.Nexus.deploy(10000, 3, "ipfs://xyz");
+    this.nexus = await this.NexusVoyagers.deploy(10000, 3, "ipfs://xyz");
     await this.nexus.deployed();
   });
 
@@ -243,7 +243,7 @@ describe("Nexus", function () {
   });
 
   it("enforces token supply limit", async function () {
-    const contract = await ethers.getContractFactory("Nexus");
+    const contract = await ethers.getContractFactory("NexusVoyagers");
     const nexusNFT = await contract.deploy(10, 20, "ipfs://xyz");
 
     await nexusNFT.deployed();
