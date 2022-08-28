@@ -187,7 +187,7 @@ const config: HardhatUserConfig = {
     },
   },
   gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
+    enabled: true,
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
     token: "ETH",
     showTimeSpent: true,
