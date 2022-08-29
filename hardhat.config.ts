@@ -17,11 +17,11 @@ const getConnectedContract = async (
 ): Promise<Contract | null> => {
   try {
     const signer = await hre.ethers.getSigner(
-      String(process.env.NV_CONTRACT_OWNER_DEVELOPMENT)
+      String(process.env.HARDHAT_CONTRACT_OWNER)
     );
     const NexusVoyagers = await hre.ethers.getContractAt(
       "NexusVoyagers",
-      String(process.env.NV_CONTRACT_ADDRESS_DEVELOPMENT)
+      String(process.env.HARDHAT_CONTRACT_ADDRESS)
     );
 
     return await NexusVoyagers.connect(signer);
@@ -180,10 +180,13 @@ task("withdrawal-address")
 const config: HardhatUserConfig = {
   solidity: "0.8.4",
   networks: {
-    ropsten: {
-      url: process.env.ROPSTEN_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    mainnet: {
+      url: process.env.MAINNET_URL,
+      accounts: [],
+    },
+    goerli: {
+      url: process.env.GOERLI_URL,
+      accounts: [],
     },
   },
   gasReporter: {
@@ -194,7 +197,10 @@ const config: HardhatUserConfig = {
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: {
+      mainnet: process.env.MAINNET_ETHERSCAN_API_KEY,
+      goerli: process.env.GOERLI_ETHERSCAN_API_KEY,
+    },
   },
 };
 

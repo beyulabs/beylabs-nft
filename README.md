@@ -36,9 +36,9 @@ Gas estimates are generated when tests are run using [hardhat-gas-reporter](http
 
 These values need to be defined in a local `.env` file:
 
-- `NV_CONTRACT_OWNER_DEVELOPMENT` - Address of contract owner for local development
-- `NV_CONTRACT_ADDRESS_DEVELOPMENT` - Address of deployed contract on local chain
+- `HARDHAT_CONTRACT_OWNER` - Address of contract owner for local development
+- `HARDHAT_CONTRACT_ADDRESS` - Address of deployed contract on local chain
 - `NV_CONTRACT_OWNER_PRODUCTION` - Address of contract owner on mainnet
 - `NV_CONTRACT_ADDRESS_PRODUCTION` - Address of deployed contract on mainnet
-- `ETHERSCAN_API_KEY` - API key for verifying production contract on mainnet
+- `ETHERSCAN_API_KEY` - Etherscan API key for verifying contracts
 - `COINMARKETCAP_API_KEY` - API key for CoinMarketCap, which is used to generate gas estimates when running unit tests

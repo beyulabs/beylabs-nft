@@ -9,7 +9,7 @@ async function main() {
 
   await contract.deployed();
   await contract.transferOwnership(
-    process.env.NV_CONTRACT_OWNER_DEVELOPMENT as string
+    process.env.HARDHAT_CONTRACT_OWNER as string
   );
 
   console.log("NexusVoyagers deployed to:", contract.address);
