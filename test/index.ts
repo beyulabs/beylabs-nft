@@ -4,30 +4,15 @@ import { ethers } from "hardhat";
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
 
-const { MerkleTree } = require("merkletreejs");
 const { keccak256 } = ethers.utils;
 
 describe("Nexus", function () {
   before(async function () {
     this.Nexus = await ethers.getContractFactory("Nexus");
-
-    const [owner, addr1, addr2, addr3] = await ethers.getSigners();
-
-    this.presaleAddresses = [owner.address, addr1.address, addr3.address];
-
-    this.leaves = this.presaleAddresses.map((x: string) => keccak256(x));
-    this.tree = new MerkleTree(this.leaves, keccak256, { sort: true });
-    this.presaleMerkleRoot = this.tree.getHexRoot();
   });
 
   beforeEach(async function () {
-    this.nexus = await this.Nexus.deploy(
-      1000,
-      10000,
-      3,
-      this.presaleMerkleRoot,
-      "ipfs://xyz"
-    );
+    this.nexus = await this.Nexus.deploy(10000, 3, "ipfs://xyz");
     await this.nexus.deployed();
   });
 
@@ -35,7 +20,6 @@ describe("Nexus", function () {
     const preMintPrice = await this.nexus.FOUNDING_CREW_MINT_PRICE();
     const mintPrice = await this.nexus.CREW_MINT_PRICE();
     const maxPerWallet = await this.nexus.MAX_TOKEN_PER_WALLET();
-    const foundingCrewSize = await this.nexus.MAX_FOUNDING_CREW_SIZE();
     const crewSize = await this.nexus.MAX_CREW_SIZE();
     const baseURI = await this.nexus.BASE_URI();
 
@@ -47,9 +31,6 @@ describe("Nexus", function () {
 
     expect(maxPerWallet).to.be.instanceOf(BigNumber);
     expect(ethers.utils.formatUnits(maxPerWallet, 0)).to.be.equal("3");
-
-    expect(foundingCrewSize).to.be.instanceOf(BigNumber);
-    expect(ethers.utils.formatUnits(foundingCrewSize, 0)).to.be.equal("1000");
 
     expect(crewSize).to.be.instanceOf(BigNumber);
     expect(ethers.utils.formatUnits(crewSize, 0)).to.be.equal("10000");
@@ -105,10 +86,9 @@ describe("Nexus", function () {
 
   it("pre-mint function enforces isPreboardingOpen modifier", async function () {
     const [owner, addr1] = await ethers.getSigners();
-    const proof = this.tree.getHexProof(keccak256(addr1.address));
 
     await expectRevert.unspecified(
-      this.nexus.connect(addr1).preMint(1, proof),
+      this.nexus.connect(addr1).preMint(1),
       "Not boarding yet, space sailor!"
     );
   });
@@ -120,13 +100,9 @@ describe("Nexus", function () {
     const preboarding = await this.nexus.preboarding();
     expect(preboarding).to.be.equal(true);
 
-    const goodMerkleProof = this.tree.getHexProof(keccak256(addr1.address));
-
-    const mintTxn = await this.nexus
-      .connect(addr1)
-      .preMint(1, goodMerkleProof, {
-        value: ethers.utils.parseEther("0.07"),
-      });
+    const mintTxn = await this.nexus.connect(addr1).preMint(1, {
+      value: ethers.utils.parseEther("0.07"),
+    });
 
     expect(mintTxn.value).to.be.equal(ethers.utils.parseEther("0.07"));
     expect(mintTxn.to).to.be.equal(this.nexus.address);
@@ -270,14 +246,7 @@ describe("Nexus", function () {
 
   it("enforces token supply limit", async function () {
     const contract = await ethers.getContractFactory("Nexus");
-
-    const nexusNFT = await contract.deploy(
-      1,
-      10,
-      20,
-      this.presaleMerkleRoot,
-      "ipfs://xyz"
-    );
+    const nexusNFT = await contract.deploy(10, 20, "ipfs://xyz");
 
     await nexusNFT.deployed();
     await nexusNFT.toggleGeneralBoarding(true);
@@ -319,31 +288,6 @@ describe("Nexus", function () {
     maxPerWallet = await this.nexus.MAX_TOKEN_PER_WALLET();
     expect(maxPerWallet).to.be.instanceOf(BigNumber);
     expect(ethers.utils.formatUnits(maxPerWallet, 0)).to.be.equal("10");
-  });
-
-  it("enforces merkle check for preMint", async function () {
-    const [owner, addr1, addr2] = await ethers.getSigners();
-    const badMerkleProof = this.tree.getHexProof(keccak256(addr2.address));
-    const goodMerkleProof = this.tree.getHexProof(keccak256(addr1.address));
-
-    await this.nexus.togglePreboarding(true);
-
-    await expectRevert.unspecified(
-      this.nexus.connect(addr2).preMint(1, badMerkleProof, {
-        value: ethers.utils.parseEther("0.07"),
-      }),
-      "Not on the preboarding list!"
-    );
-
-    const goodTxn = await this.nexus
-      .connect(addr1)
-      .preMint(1, goodMerkleProof, {
-        value: ethers.utils.parseEther("0.07"),
-      });
-
-    expect(goodTxn.to).to.be.equal(this.nexus.address);
-    expect(goodTxn.has).to.not.be.equal(null);
-    expect(goodTxn.confirmations).to.be.above(0);
   });
 
   it("returns proper tokenURI before/after update", async function () {
