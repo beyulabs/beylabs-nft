@@ -30,6 +30,8 @@ npx hardhat test
 
 We also have a GitHub Action (defined in `.github/workflows/hardhat.yml`) that automatically runs the tests when a PR is issued against the `main` branch.
 
+Gas estimates are generated when tests are run using [hardhat-gas-reporter](https://www.npmjs.com/package/hardhat-gas-reporter) and the [CoinMarketCap](https://coinmarketcap.com/) API.
+
 ### Environment variables
 
 These values need to be defined in a local `.env` file:
