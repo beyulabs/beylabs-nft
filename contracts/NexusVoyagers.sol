@@ -61,8 +61,11 @@ contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     /**
      * @dev Ensures there are tokens left to mint
      */
-    modifier crewSpotsAvailable() {
-        require(currentTokenId.current() <= MAX_CREW_SIZE, "No more spots!");
+    modifier crewSpotsAvailable(uint256 numToMint) {
+        require(
+            currentTokenId.current() + numToMint <= MAX_CREW_SIZE,
+            "Not that many passes left!"
+        );
         _;
     }
 
@@ -85,15 +88,26 @@ contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     /**
      * @dev Checks for the correct amount of ETH
      */
-    modifier eligibleToEnlist(uint256 numToMint) {
+    modifier eligibleForBoarding(uint256 numToMint) {
         require(msg.value == numToMint * CREW_MINT_PRICE, "Not enough ETH!");
+        _;
+    }
+
+    /**
+     * @dev Checks for the correct amount of ETH
+     */
+    modifier eligibleForPreboarding(uint256 numToMint) {
+        require(
+            msg.value == numToMint * FOUNDING_CREW_MINT_PRICE,
+            "Not enough ETH!"
+        );
         _;
     }
 
     /**
      * @dev Enforces per-wallet token limit
      */
-    modifier doesNotExceedLimit(address _address, uint256 numToMint) {
+    modifier doesNotExceedWalletLimit(address _address, uint256 numToMint) {
         uint256 currentCount = addressMintCounts[_address];
 
         require(
@@ -111,9 +125,10 @@ contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         public
         payable
         nonReentrant
-        crewSpotsAvailable
         isPreboardingOpen
-        doesNotExceedLimit(msg.sender, numToMint)
+        crewSpotsAvailable(numToMint)
+        eligibleForPreboarding(numToMint)
+        doesNotExceedWalletLimit(msg.sender, numToMint)
     {
         for (uint256 i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
@@ -130,10 +145,10 @@ contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         public
         payable
         nonReentrant
-        crewSpotsAvailable
         isGeneralBoardingOpen
-        eligibleToEnlist(numToMint)
-        doesNotExceedLimit(msg.sender, numToMint)
+        eligibleForBoarding(numToMint)
+        crewSpotsAvailable(numToMint)
+        doesNotExceedWalletLimit(msg.sender, numToMint)
     {
         for (uint256 i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
