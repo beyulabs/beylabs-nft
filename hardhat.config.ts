@@ -217,7 +217,7 @@ const config: HardhatUserConfig = {
     //   accounts: {},
     // },
     goerli: {
-      url: process.env.GOERLI_URL,
+      url: process.env.GOERLI_URL as string,
       accounts: [process.env.GOERLI_PRIVATE_KEY as string],
     },
   },
