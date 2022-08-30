@@ -7,7 +7,7 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import { HardhatRuntimeEnvironment, Network } from "hardhat/types";
-import { Contract } from "ethers";
+import { BigNumber, Contract } from "ethers";
 
 dotenv.config();
 
@@ -83,13 +83,16 @@ task("uri:set")
       const connectedContract = await getConnectedContract(hre);
 
       if (connectedContract != null) {
-        console.log(
-          `Changing base URI from ${await connectedContract.BASE_URI()} to ${
-            taskArgs.uri
-          }`
-        );
-
-        await connectedContract.setBaseURI(taskArgs.uri);
+        try {
+          await connectedContract.setBaseURI(taskArgs.uri);
+          console.log(
+            `Changing base URI from '${await connectedContract.BASE_URI()}' to '${
+              taskArgs.uri
+            }'`
+          );
+        } catch (error) {
+          console.error("Error!", error);
+        }
       }
     }
   );
@@ -100,7 +103,13 @@ task("uri:get")
     const connectedContract = await getConnectedContract(hre);
 
     if (connectedContract != null) {
-      console.log(`Current BASE_URI: ${await connectedContract.BASE_URI()}`);
+      try {
+        console.log(
+          `Current BASE_URI: '${await connectedContract.BASE_URI()}'`
+        );
+      } catch (error) {
+        console.error("Error!", error);
+      }
     }
   });
 
@@ -113,13 +122,17 @@ task("boarding:set")
       const connectedContract = await getConnectedContract(hre);
 
       if (connectedContract != null && flag != null) {
-        console.log(
-          `Changing boarding status from '${await connectedContract.generalBoarding()}' to ${
-            taskArgs.enabled
-          }`
-        );
+        try {
+          await connectedContract.toggleGeneralBoarding(flag);
 
-        await connectedContract.toggleGeneralBoarding(flag);
+          console.log(
+            `Changing boarding status from '${await connectedContract.generalBoarding()}' to '${
+              taskArgs.enabled
+            }'`
+          );
+        } catch (error) {
+          console.error("Error!", error);
+        }
       }
     }
   );
@@ -130,9 +143,13 @@ task("boarding:get")
     const connectedContract = await getConnectedContract(hre);
 
     if (connectedContract != null) {
-      console.log(
-        `Current boarding status: ${await connectedContract.generalBoarding()}`
-      );
+      try {
+        console.log(
+          `Current boarding status: '${await connectedContract.generalBoarding()}'`
+        );
+      } catch (error) {
+        console.error("Error!", error);
+      }
     }
   });
 
@@ -146,14 +163,21 @@ task("gift")
       hre: HardhatRuntimeEnvironment
     ) => {
       const connectedContract = await getConnectedContract(hre);
-      const tokensToGift = parseInt(taskArgs.tokens);
+      const tokensToGift = BigNumber.from(taskArgs.tokens);
 
       if (connectedContract != null) {
-        console.log(
-          `Sending ${taskArgs.tokens} token(s) to ${taskArgs.address}`
-        );
+        try {
+          await connectedContract.giftToken(
+            hre.ethers.utils.getAddress(taskArgs.address),
+            tokensToGift
+          );
 
-        await connectedContract.giftToken(taskArgs.address, tokensToGift);
+          console.log(
+            `Sending '${taskArgs.tokens}' token(s) to '${taskArgs.address}'`
+          );
+        } catch (error) {
+          console.log(error);
+        }
       }
     }
   );
@@ -167,13 +191,17 @@ task("preboarding:set")
       const connectedContract = await getConnectedContract(hre);
 
       if (connectedContract != null && flag != null) {
-        console.log(
-          `Changing preboarding status from '${await connectedContract.preboarding()}' to ${
-            taskArgs.enabled
-          }`
-        );
+        try {
+          await connectedContract.togglePreboarding(flag);
 
-        await connectedContract.togglePreboarding(flag);
+          console.log(
+            `Changing preboarding status from '${await connectedContract.preboarding()}' to '${
+              taskArgs.enabled
+            }'`
+          );
+        } catch (error) {
+          console.error("Error!", error);
+        }
       }
     }
   );
@@ -184,9 +212,13 @@ task("preboarding:get")
     const connectedContract = await getConnectedContract(hre);
 
     if (connectedContract != null) {
-      console.log(
-        `Current preboarding status: ${await connectedContract.preboarding()}`
-      );
+      try {
+        console.log(
+          `Current preboarding status: '${await connectedContract.preboarding()}'`
+        );
+      } catch (error) {
+        console.error("Error!", error);
+      }
     }
   });
 
@@ -195,15 +227,19 @@ task("limit:set")
   .addParam("limit")
   .setAction(
     async (taskArgs: { limit: string }, hre: HardhatRuntimeEnvironment) => {
-      const walletLimit = parseInt(taskArgs.limit);
+      const walletLimit = BigNumber.from(taskArgs.limit);
       const connectedContract = await getConnectedContract(hre);
 
       if (connectedContract != null) {
-        console.log(
-          `Changing wallet limit from ${await connectedContract.MAX_TOKEN_PER_WALLET()} to ${walletLimit}`
-        );
+        try {
+          await connectedContract.setPerWalletLimit(walletLimit);
 
-        await connectedContract.setPerWalletLimit(walletLimit);
+          console.log(
+            `Changing wallet limit from '${await connectedContract.MAX_TOKEN_PER_WALLET()}' to '${walletLimit}'`
+          );
+        } catch (error) {
+          console.log("Error!", error);
+        }
       }
     }
   );
@@ -214,13 +250,17 @@ task("limit:get")
     const connectedContract = await getConnectedContract(hre);
 
     if (connectedContract != null) {
-      console.log(
-        `Current preboarding status: ${await connectedContract.MAX_TOKEN_PER_WALLET()}`
-      );
+      try {
+        console.log(
+          `Current wallet limit: '${await connectedContract.MAX_TOKEN_PER_WALLET()}'`
+        );
+      } catch (error) {
+        console.error("Error!", error);
+      }
     }
   });
 
-task("withdrawal-address:set")
+task("withdrawal:set")
   .setDescription("Set withdrawal address")
   .addParam("address")
   .setAction(
@@ -228,26 +268,34 @@ task("withdrawal-address:set")
       const connectedContract = await getConnectedContract(hre);
 
       if (connectedContract != null) {
-        console.log(
-          `Changing withdrawal address from ${await connectedContract.withdrawalAddress()} to ${
-            taskArgs.address
-          }`
-        );
+        try {
+          await connectedContract.setWithdrawalAddress(taskArgs.address);
 
-        await connectedContract.setWithdrawalAddress(taskArgs.address);
+          console.log(
+            `Changing withdrawal address from '${await connectedContract.withdrawalAddress()}' to '${hre.ethers.utils.getAddress(
+              taskArgs.address
+            )}'`
+          );
+        } catch (error) {
+          console.error("Error!", error);
+        }
       }
     }
   );
 
-task("withdrawal-address:get")
+task("withdrawal:get")
   .setDescription("Get current withdrawal address")
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
     const connectedContract = await getConnectedContract(hre);
 
     if (connectedContract != null) {
-      console.log(
-        `Current withdrawl address: ${await connectedContract.withdrawalAddress()}`
-      );
+      try {
+        console.log(
+          `Current withdrawl address: '${await connectedContract.withdrawalAddress()}'`
+        );
+      } catch (error) {
+        console.error("Error!", error);
+      }
     }
   });
 
