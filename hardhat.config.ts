@@ -217,21 +217,29 @@ const config: HardhatUserConfig = {
     //   accounts: {},
     // },
     goerli: {
-      url: process.env.GOERLI_URL as string,
-      accounts: [process.env.GOERLI_PRIVATE_KEY as string],
+      url: process.env.GOERLI_URL ? (process.env.GOERLI_URL as string) : "",
+      accounts: process.env.GOERLI_PRIVATE_KEY
+        ? [process.env.GOERLI_PRIVATE_KEY as string]
+        : [],
     },
   },
   gasReporter: {
     enabled: true,
-    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY
+      ? process.env.COINMARKETCAP_API_KEY
+      : "",
     token: "ETH",
     showTimeSpent: true,
     currency: "USD",
   },
   etherscan: {
     apiKey: {
-      mainnet: process.env.MAINNET_ETHERSCAN_API_KEY,
-      goerli: process.env.GOERLI_ETHERSCAN_API_KEY,
+      mainnet: process.env.MAINNET_ETHERSCAN_API_KEY
+        ? process.env.MAINNET_ETHERSCAN_API_KEY
+        : "",
+      goerli: process.env.GOERLI_ETHERSCAN_API_KEY
+        ? process.env.GOERLI_ETHERSCAN_API_KEY
+        : "",
     },
   },
 };
