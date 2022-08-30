@@ -6,22 +6,54 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { HardhatRuntimeEnvironment, Network } from "hardhat/types";
 import { Contract } from "ethers";
 
 dotenv.config();
 
 // Utils
+export const getOwnerAndAddress = (
+  network: Network
+): {
+  contractAddress: string;
+  contractOwner: string;
+} => {
+  console.log(`Using the ${network.name} network!`);
+
+  switch (network.name) {
+    case "goerli":
+      return {
+        contractAddress: process.env.GOERLI_CONTRACT_ADDRESS as string,
+        contractOwner: process.env.GOERLI_CONTRACT_OWNER as string,
+      };
+    case "localhost":
+      return {
+        contractAddress: process.env.HARDHAT_CONTRACT_ADDRESS as string,
+        contractOwner: process.env.HARDHAT_CONTRACT_OWNER as string,
+      };
+    case "mainnet":
+      return {
+        contractAddress: process.env.MAINNET_CONTRACT_ADDRESS as string,
+        contractOwner: process.env.MAINNET_CONTRACT_OWNER as string,
+      };
+    default:
+      return {
+        contractAddress: process.env.HARDHAT_CONTRACT_ADDRESS as string,
+        contractOwner: process.env.HARDHAT_CONTRACT_OWNER as string,
+      };
+  }
+};
+
 const getConnectedContract = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<Contract | null> => {
+  const { contractAddress, contractOwner } = getOwnerAndAddress(hre.network);
+
   try {
-    const signer = await hre.ethers.getSigner(
-      String(process.env.HARDHAT_CONTRACT_OWNER)
-    );
+    const signer = await hre.ethers.getSigner(contractOwner as string);
     const NexusVoyagers = await hre.ethers.getContractAt(
       "NexusVoyagers",
-      String(process.env.HARDHAT_CONTRACT_ADDRESS)
+      contractAddress as string
     );
 
     return await NexusVoyagers.connect(signer);
@@ -180,13 +212,13 @@ task("withdrawal-address")
 const config: HardhatUserConfig = {
   solidity: "0.8.4",
   networks: {
-    mainnet: {
-      url: process.env.MAINNET_URL,
-      accounts: [],
-    },
+    // mainnet: {
+    //   url: process.env.MAINNET_URL,
+    //   accounts: {},
+    // },
     goerli: {
       url: process.env.GOERLI_URL,
-      accounts: [],
+      accounts: [process.env.GOERLI_PRIVATE_KEY as string],
     },
   },
   gasReporter: {

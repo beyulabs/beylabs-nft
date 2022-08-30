@@ -36,9 +36,16 @@ Gas estimates are generated when tests are run using [hardhat-gas-reporter](http
 
 These values need to be defined in a local `.env` file:
 
-- `HARDHAT_CONTRACT_OWNER` - Address of contract owner for local development
-- `HARDHAT_CONTRACT_ADDRESS` - Address of deployed contract on local chain
-- `NV_CONTRACT_OWNER_PRODUCTION` - Address of contract owner on mainnet
-- `NV_CONTRACT_ADDRESS_PRODUCTION` - Address of deployed contract on mainnet
-- `ETHERSCAN_API_KEY` - Etherscan API key for verifying contracts
-- `COINMARKETCAP_API_KEY` - API key for CoinMarketCap, which is used to generate gas estimates when running unit tests
+- `COINMARKETCAP_API_KEY`: API key for CoinMarketCap, which is used to generate gas estimates when running unit tests
+- `MAINNET_ETHERSCAN_API_KEY`: Etherscan API key for verifying contracts on mainnet
+- `GOERLI_ETHERSCAN_API_KEY`: Etherscan API key for verifying contracts on Goerli testnet
+- `HARDHAT_CONTRACT_ADDRESS`: Address of contract owner for local development
+- `HARDHAT_CONTRACT_OWNER`: Address of deployed contract on local chain
+- `GOERLI_URL`: URL for Goerli JSON-RPC provider
+- `GOERLI_PRIVATE_KEY`: Private key for Goerli account to use for deployments/interactions
+- `GOERLI_CONTRACT_ADDRESS`: Address of deployed contract on Goerli
+- `GOERLI_CONTRACT_OWNER`: Address of contract owner on Goerli
+- `MAINNET_URL`: URL for mainnet JSON-RPC provider
+- `MAINNET_PRIVATE_KEY`: Private key for mainnet account to use for deployments/interactions
+- `MAINNET_CONTRACT_ADDRESS`: Address of deployed contract on mainnet
+- `MAINNET_CONTRACT_OWNER`: Address of contract owner on mainnet
