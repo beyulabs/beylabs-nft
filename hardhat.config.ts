@@ -75,7 +75,7 @@ const parseBoolean = (flag: string): boolean | null => {
 };
 
 // Tasks
-task("base-uri")
+task("uri:set")
   .setDescription("Set contract BASE_URI")
   .addParam("uri")
   .setAction(
@@ -83,16 +83,28 @@ task("base-uri")
       const connectedContract = await getConnectedContract(hre);
 
       if (connectedContract != null) {
-        console.log("Current base URI:", await connectedContract.BASE_URI());
+        console.log(
+          `Changing base URI from ${await connectedContract.BASE_URI()} to ${
+            taskArgs.uri
+          }`
+        );
 
         await connectedContract.setBaseURI(taskArgs.uri);
-
-        console.log("New base URI:", await connectedContract.BASE_URI());
       }
     }
   );
 
-task("boarding")
+task("uri:get")
+  .setDescription("Get contract BASE_URI")
+  .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const connectedContract = await getConnectedContract(hre);
+
+    if (connectedContract != null) {
+      console.log(`Current BASE_URI: ${await connectedContract.BASE_URI()}`);
+    }
+  });
+
+task("boarding:set")
   .setDescription("Enable/disable boarding phase")
   .addParam("enabled")
   .setAction(
@@ -102,19 +114,27 @@ task("boarding")
 
       if (connectedContract != null && flag != null) {
         console.log(
-          "Current boarding status:",
-          await connectedContract.generalBoarding()
+          `Changing boarding status from '${await connectedContract.generalBoarding()}' to ${
+            taskArgs.enabled
+          }`
         );
 
         await connectedContract.toggleGeneralBoarding(flag);
-
-        console.log(
-          "New boarding status:",
-          await connectedContract.generalBoarding()
-        );
       }
     }
   );
+
+task("boarding:get")
+  .setDescription("Get boarding status")
+  .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const connectedContract = await getConnectedContract(hre);
+
+    if (connectedContract != null) {
+      console.log(
+        `Current boarding status: ${await connectedContract.generalBoarding()}`
+      );
+    }
+  });
 
 task("gift")
   .setDescription("Mint and gift token(s) to address")
@@ -138,7 +158,7 @@ task("gift")
     }
   );
 
-task("preboarding")
+task("preboarding:set")
   .setDescription("Enable/disable preboarding phase")
   .addParam("enabled")
   .setAction(
@@ -148,21 +168,29 @@ task("preboarding")
 
       if (connectedContract != null && flag != null) {
         console.log(
-          "Current preboarding status:",
-          await connectedContract.preboarding()
+          `Changing preboarding status from '${await connectedContract.preboarding()}' to ${
+            taskArgs.enabled
+          }`
         );
 
         await connectedContract.togglePreboarding(flag);
-
-        console.log(
-          "New preboarding status:",
-          await connectedContract.preboarding()
-        );
       }
     }
   );
 
-task("wallet-limit")
+task("preboarding:get")
+  .setDescription("Get preboarding status")
+  .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const connectedContract = await getConnectedContract(hre);
+
+    if (connectedContract != null) {
+      console.log(
+        `Current preboarding status: ${await connectedContract.preboarding()}`
+      );
+    }
+  });
+
+task("limit:set")
   .setDescription("Set per wallet token limit")
   .addParam("limit")
   .setAction(
@@ -172,21 +200,27 @@ task("wallet-limit")
 
       if (connectedContract != null) {
         console.log(
-          "Current per wallet limit:",
-          await connectedContract.MAX_TOKEN_PER_WALLET()
+          `Changing wallet limit from ${await connectedContract.MAX_TOKEN_PER_WALLET()} to ${walletLimit}`
         );
 
         await connectedContract.setPerWalletLimit(walletLimit);
-
-        console.log(
-          "New per wallet limit:",
-          await connectedContract.MAX_TOKEN_PER_WALLET()
-        );
       }
     }
   );
 
-task("withdrawal-address")
+task("limit:get")
+  .setDescription("Get per wallet token limit")
+  .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const connectedContract = await getConnectedContract(hre);
+
+    if (connectedContract != null) {
+      console.log(
+        `Current preboarding status: ${await connectedContract.MAX_TOKEN_PER_WALLET()}`
+      );
+    }
+  });
+
+task("withdrawal-address:set")
   .setDescription("Set withdrawal address")
   .addParam("address")
   .setAction(
@@ -195,19 +229,27 @@ task("withdrawal-address")
 
       if (connectedContract != null) {
         console.log(
-          "Current withdrawal address:",
-          await connectedContract.withdrawalAddress()
+          `Changing withdrawal address from ${await connectedContract.withdrawalAddress()} to ${
+            taskArgs.address
+          }`
         );
 
         await connectedContract.setWithdrawalAddress(taskArgs.address);
-
-        console.log(
-          "New withdrawal address:",
-          await connectedContract.withdrawalAddress()
-        );
       }
     }
   );
+
+task("withdrawal-address:get")
+  .setDescription("Get current withdrawal address")
+  .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const connectedContract = await getConnectedContract(hre);
+
+    if (connectedContract != null) {
+      console.log(
+        `Current withdrawl address: ${await connectedContract.withdrawalAddress()}`
+      );
+    }
+  });
 
 const config: HardhatUserConfig = {
   solidity: "0.8.4",
