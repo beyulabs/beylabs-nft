@@ -46,12 +46,12 @@ contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     mapping(address => uint256) private addressMintCounts;
 
     constructor(
-        uint256 maxCrewSize,
-        uint256 maxTokensPerWallet,
+        uint256 _maxCrewSize,
+        uint256 _maxTokensPerWallet,
         string memory _baseURI
     ) ERC721("Nexus Voyagers", "VOYAGER") {
-        MAX_CREW_SIZE = maxCrewSize;
-        MAX_TOKEN_PER_WALLET = maxTokensPerWallet;
+        MAX_CREW_SIZE = _maxCrewSize;
+        MAX_TOKEN_PER_WALLET = _maxTokensPerWallet;
         BASE_URI = _baseURI;
 
         currentTokenId.increment();
@@ -63,8 +63,8 @@ contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
      */
     modifier crewSpotsAvailable(uint256 numToMint) {
         require(
-            currentTokenId.current() + numToMint <= MAX_CREW_SIZE,
-            "Not that many passes left!"
+            (currentTokenId.current() - 1) + numToMint <= MAX_CREW_SIZE,
+            "Not enough passes left!"
         );
         _;
     }

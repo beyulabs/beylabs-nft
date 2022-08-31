@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { BigNumber } from "ethers";
+import { BigNumber, getDefaultProvider } from "ethers";
 import { ethers } from "hardhat";
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
@@ -252,27 +252,20 @@ describe("NexusVoyagers", function () {
     const generalBoarding = await nexusNFT.generalBoarding();
     expect(generalBoarding).to.be.equal(true);
 
-    const [owner, addr1, addr2, addr3] = await ethers.getSigners();
+    const [owner, addr1, addr2] = await ethers.getSigners();
 
-    const nineTxn = await nexusNFT.connect(addr1).mint(9, {
-      value: ethers.utils.parseEther("0.81"),
+    const nineTxn = await nexusNFT.connect(addr1).mint(10, {
+      value: ethers.utils.parseEther("0.9"),
     });
-    expect(nineTxn.value).to.be.equal(ethers.utils.parseEther("0.81"));
+    expect(nineTxn.value).to.be.equal(ethers.utils.parseEther("0.9"));
     expect(nineTxn.to).to.be.equal(nexusNFT.address);
     expect(nineTxn.confirmations).to.be.above(0);
 
-    const tenTxn = await nexusNFT.connect(addr2).mint(10, {
-      value: ethers.utils.parseEther("0.9"),
-    });
-    expect(tenTxn.value).to.be.equal(ethers.utils.parseEther("0.9"));
-    expect(tenTxn.to).to.be.equal(nexusNFT.address);
-    expect(tenTxn.confirmations).to.be.above(0);
-
     await expectRevert.unspecified(
-      this.nexus.connect(addr3).mint(11, {
-        value: ethers.utils.parseEther("0.99"),
+      this.nexus.connect(addr2).mint(1, {
+        value: ethers.utils.parseEther("0.09"),
       }),
-      "No more spots!"
+      "Not enough passes left!"
     );
   });
 
