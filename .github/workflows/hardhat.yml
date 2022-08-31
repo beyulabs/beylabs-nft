@@ -8,6 +8,6 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-versions: '14'
+          node-versions: "14"
       - run: npm install
-      - run: npx hardhat test
+      - run: npx hardhat test --network hardhat

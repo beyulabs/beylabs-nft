@@ -1,46 +1,51 @@
-# Advanced Sample Hardhat Project
+# Nexus Voyagers
 
-This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
+### Smart contract
 
-The project comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts. It also comes with a variety of other tools, preconfigured to work with the project code.
+This smart contract was built using [Hardhat](https://hardhat.org/). You can refer to their [documentation](https://hardhat.org/docs) for more details.
 
-Try running some of the following tasks:
+### TL;DR
+
+#### Local development
+
+1. Spin up a local blockchain instance
 
 ```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
 npx hardhat node
-npx hardhat help
-REPORT_GAS=true npx hardhat test
-npx hardhat coverage
-npx hardhat run scripts/deploy.ts
-TS_NODE_FILES=true npx ts-node scripts/deploy.ts
-npx eslint '**/*.{js,ts}'
-npx eslint '**/*.{js,ts}' --fix
-npx prettier '**/*.{json,sol,md}' --check
-npx prettier '**/*.{json,sol,md}' --write
-npx solhint 'contracts/**/*.sol'
-npx solhint 'contracts/**/*.sol' --fix
 ```
 
-# Etherscan verification
-
-To try out Etherscan verification, you first need to deploy a contract to an Ethereum network that's supported by Etherscan, such as Ropsten.
-
-In this project, copy the .env.example file to a file named .env, and then edit it to fill in the details. Enter your Etherscan API key, your Ropsten node URL (eg from Alchemy), and the private key of the account which will send the deployment transaction. With a valid .env file in place, first deploy your contract:
+2. Deploy the Nexus Voyagers contract to the local chain
 
 ```shell
-hardhat run --network ropsten scripts/deploy.ts
+npx hardhat run --network localhost scripts/deploy.ts
 ```
 
-Then, copy the deployment address and paste it in to replace `DEPLOYED_CONTRACT_ADDRESS` in this command:
+#### Unit tests
+
+Unit tests are defined in the `test` subdirectory and can be executed locally by running:
 
 ```shell
-npx hardhat verify --network ropsten DEPLOYED_CONTRACT_ADDRESS "Hello, Hardhat!"
+npx hardhat test
 ```
 
-# Performance optimizations
+We also have a GitHub Action (defined in `.github/workflows/hardhat.yml`) that automatically runs the tests when a PR is issued against the `main` branch.
 
-For faster runs of your tests and scripts, consider skipping ts-node's type checking by setting the environment variable `TS_NODE_TRANSPILE_ONLY` to `1` in hardhat's environment. For more details see [the documentation](https://hardhat.org/guides/typescript.html#performance-optimizations).
+Gas estimates are generated when tests are run using [hardhat-gas-reporter](https://www.npmjs.com/package/hardhat-gas-reporter) and the [CoinMarketCap](https://coinmarketcap.com/) API.
+
+### Environment variables
+
+These values need to be defined in a local `.env` file:
+
+- `COINMARKETCAP_API_KEY`: API key for CoinMarketCap, which is used to generate gas estimates when running unit tests
+- `MAINNET_ETHERSCAN_API_KEY`: Etherscan API key for verifying contracts on mainnet
+- `GOERLI_ETHERSCAN_API_KEY`: Etherscan API key for verifying contracts on Goerli testnet
+- `HARDHAT_CONTRACT_ADDRESS`: Address of contract owner for local development
+- `HARDHAT_CONTRACT_OWNER`: Address of deployed contract on local chain
+- `GOERLI_URL`: URL for Goerli JSON-RPC provider
+- `GOERLI_PRIVATE_KEY`: Private key for Goerli account to use for deployments/interactions
+- `GOERLI_CONTRACT_ADDRESS`: Address of deployed contract on Goerli
+- `GOERLI_CONTRACT_OWNER`: Address of contract owner on Goerli
+- `MAINNET_URL`: URL for mainnet JSON-RPC provider
+- `MAINNET_PRIVATE_KEY`: Private key for mainnet account to use for deployments/interactions
+- `MAINNET_CONTRACT_ADDRESS`: Address of deployed contract on mainnet
+- `MAINNET_CONTRACT_OWNER`: Address of contract owner on mainnet

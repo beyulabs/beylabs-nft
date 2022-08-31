@@ -19,11 +19,11 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
- * @title Nexus Project
+ * @title Nexus Voyagers
  * @author Ryan Harris
  */
 
-contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
+contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     using Strings for uint256;
     using Counters for Counters.Counter;
     Counters.Counter private currentTokenId;
@@ -46,12 +46,12 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     mapping(address => uint256) private addressMintCounts;
 
     constructor(
-        uint256 maxCrewSize,
-        uint256 maxTokensPerWallet,
+        uint256 _maxCrewSize,
+        uint256 _maxTokensPerWallet,
         string memory _baseURI
-    ) ERC721("Nexus Project", "NXS") {
-        MAX_CREW_SIZE = maxCrewSize;
-        MAX_TOKEN_PER_WALLET = maxTokensPerWallet;
+    ) ERC721("Nexus Voyagers", "VOYAGER") {
+        MAX_CREW_SIZE = _maxCrewSize;
+        MAX_TOKEN_PER_WALLET = _maxTokensPerWallet;
         BASE_URI = _baseURI;
 
         currentTokenId.increment();
@@ -61,8 +61,11 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     /**
      * @dev Ensures there are tokens left to mint
      */
-    modifier crewSpotsAvailable() {
-        require(currentTokenId.current() <= MAX_CREW_SIZE, "No more spots!");
+    modifier crewSpotsAvailable(uint256 numToMint) {
+        require(
+            (currentTokenId.current() - 1) + numToMint <= MAX_CREW_SIZE,
+            "Not enough passes left!"
+        );
         _;
     }
 
@@ -85,15 +88,26 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     /**
      * @dev Checks for the correct amount of ETH
      */
-    modifier eligibleToEnlist(uint256 numToMint) {
+    modifier eligibleForBoarding(uint256 numToMint) {
         require(msg.value == numToMint * CREW_MINT_PRICE, "Not enough ETH!");
+        _;
+    }
+
+    /**
+     * @dev Checks for the correct amount of ETH
+     */
+    modifier eligibleForPreboarding(uint256 numToMint) {
+        require(
+            msg.value == numToMint * FOUNDING_CREW_MINT_PRICE,
+            "Not enough ETH!"
+        );
         _;
     }
 
     /**
      * @dev Enforces per-wallet token limit
      */
-    modifier doesNotExceedLimit(address _address, uint256 numToMint) {
+    modifier doesNotExceedWalletLimit(address _address, uint256 numToMint) {
         uint256 currentCount = addressMintCounts[_address];
 
         require(
@@ -111,9 +125,10 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         public
         payable
         nonReentrant
-        crewSpotsAvailable
         isPreboardingOpen
-        doesNotExceedLimit(msg.sender, numToMint)
+        crewSpotsAvailable(numToMint)
+        eligibleForPreboarding(numToMint)
+        doesNotExceedWalletLimit(msg.sender, numToMint)
     {
         for (uint256 i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
@@ -130,10 +145,10 @@ contract Nexus is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         public
         payable
         nonReentrant
-        crewSpotsAvailable
         isGeneralBoardingOpen
-        eligibleToEnlist(numToMint)
-        doesNotExceedLimit(msg.sender, numToMint)
+        eligibleForBoarding(numToMint)
+        crewSpotsAvailable(numToMint)
+        doesNotExceedWalletLimit(msg.sender, numToMint)
     {
         for (uint256 i = 0; i < numToMint; i++) {
             _safeMint(msg.sender, currentTokenId.current());
