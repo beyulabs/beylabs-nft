@@ -11,7 +11,7 @@ async function main(hre: HardhatRuntimeEnvironment) {
   const { contractAddress, contractOwner } = getOwnerAndAddress(hre.network);
   const NexusVoyagers = await ethers.getContractFactory("NexusVoyagers");
 
-  const contract = await NexusVoyagers.deploy(100, 10, "ipfs://xyz");
+  const contract = await NexusVoyagers.deploy(0, 0, 100, 10, "ipfs://xyz");
   await contract.deployed();
 
   await contract.transferOwnership(contractOwner);

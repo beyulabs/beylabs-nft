@@ -33,7 +33,7 @@ contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     uint256 public MAX_TOKEN_PER_WALLET;
     string public BASE_URI;
 
-    // ~~~ ====> Ticket prices
+    // ~~~ ====> Ticket prices (in wei)
     uint256 public FOUNDING_CREW_MINT_PRICE;
     uint256 public CREW_MINT_PRICE;
 

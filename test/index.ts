@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { BigNumber, getDefaultProvider } from "ethers";
+import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
@@ -10,7 +10,13 @@ describe("NexusVoyagers", function () {
   });
 
   beforeEach(async function () {
-    this.nexus = await this.NexusVoyagers.deploy(10000, 3, "ipfs://xyz");
+    this.nexus = await this.NexusVoyagers.deploy(
+      ethers.utils.parseUnits("70000000000000000", "wei"),
+      ethers.utils.parseUnits("90000000000000000", "wei"),
+      10000,
+      3,
+      "ipfs://xyz"
+    );
     await this.nexus.deployed();
   });
 
@@ -244,7 +250,13 @@ describe("NexusVoyagers", function () {
 
   it("enforces token supply limit", async function () {
     const contract = await ethers.getContractFactory("NexusVoyagers");
-    const nexusNFT = await contract.deploy(10, 20, "ipfs://xyz");
+    const nexusNFT = await contract.deploy(
+      ethers.utils.parseUnits("70000000000000000"),
+      ethers.utils.parseUnits("90000000000000000"),
+      10,
+      20,
+      "ipfs://xyz"
+    );
 
     await nexusNFT.deployed();
     await nexusNFT.toggleGeneralBoarding(true);
@@ -298,5 +310,74 @@ describe("NexusVoyagers", function () {
     await this.nexus.setBaseURI("ipfs://abc");
 
     expect(await this.nexus.tokenURI(1)).to.equal("ipfs://abc/1.json");
+  });
+
+  it("owner can update presale price", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+    const currentPrice = await this.nexus.FOUNDING_CREW_MINT_PRICE();
+    console.log(currentPrice);
+
+    expect(currentPrice).to.be.instanceOf(BigNumber);
+    expect(currentPrice).to.be.equal(ethers.utils.parseEther("0.07"));
+
+    const txn = await this.nexus
+      .connect(owner)
+      .setPresalePrice(ethers.utils.parseUnits("50000000000000000", "wei"));
+
+    expect(txn.to).to.be.equal(this.nexus.address);
+    expect(txn.confirmations).to.be.above(0);
+    expect(await this.nexus.FOUNDING_CREW_MINT_PRICE()).to.equal(
+      ethers.utils.parseEther("0.05")
+    );
+  });
+
+  it("owner can update sale price", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+    const currentPrice = await this.nexus.CREW_MINT_PRICE();
+
+    expect(currentPrice).to.be.instanceOf(BigNumber);
+    expect(currentPrice).to.be.equal(
+      ethers.utils.parseUnits("90000000000000000", "wei")
+    );
+
+    const txn = await this.nexus
+      .connect(owner)
+      .setSalePrice(ethers.utils.parseEther("0.02"));
+
+    expect(txn.to).to.be.equal(this.nexus.address);
+    expect(txn.confirmations).to.be.above(0);
+    expect(await this.nexus.CREW_MINT_PRICE()).to.equal(
+      ethers.utils.parseEther("0.02")
+    );
+  });
+
+  it("non-owner cannot update presale price", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+    const currentPrice = await this.nexus.FOUNDING_CREW_MINT_PRICE();
+
+    expect(currentPrice).to.be.instanceOf(BigNumber);
+    expect(ethers.utils.formatEther(currentPrice)).to.be.equal("0.07");
+
+    await expectRevert.unspecified(
+      await this.nexus
+        .connect(addr1)
+        .setSalePrice(ethers.utils.parseUnits("1000000000000000000", "wei")),
+      "Ownable: caller is not the owner"
+    );
+  });
+
+  it("non-owner cannot update sale price", async function () {
+    const [owner, addr1] = await ethers.getSigners();
+    const currentPrice = await this.nexus.CREW_MINT_PRICE();
+
+    expect(currentPrice).to.be.instanceOf(BigNumber);
+    expect(ethers.utils.formatEther(currentPrice)).to.be.equal("0.09");
+
+    await expectRevert.unspecified(
+      await this.nexus
+        .connect(addr1)
+        .setSalePrice(ethers.utils.parseUnits("1000000000000000000", "wei")),
+      "Ownable: caller is not the owner"
+    );
   });
 });
