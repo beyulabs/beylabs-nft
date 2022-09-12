@@ -33,9 +33,9 @@ contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     uint256 public MAX_TOKEN_PER_WALLET;
     string public BASE_URI;
 
-    // ~~~ ====> Ticket prices
-    uint256 public constant FOUNDING_CREW_MINT_PRICE = 0.07 ether;
-    uint256 public constant CREW_MINT_PRICE = 0.09 ether;
+    // ~~~ ====> Ticket prices (in wei)
+    uint256 public FOUNDING_CREW_MINT_PRICE;
+    uint256 public CREW_MINT_PRICE;
 
     // ~~~ ====> Boarding phases
     bool public preboarding = false;
@@ -46,6 +46,8 @@ contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
     mapping(address => uint256) private addressMintCounts;
 
     constructor(
+        uint256 _presalePrice,
+        uint256 _salePrice,
         uint256 _maxCrewSize,
         uint256 _maxTokensPerWallet,
         string memory _baseURI
@@ -53,6 +55,8 @@ contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
         MAX_CREW_SIZE = _maxCrewSize;
         MAX_TOKEN_PER_WALLET = _maxTokensPerWallet;
         BASE_URI = _baseURI;
+        FOUNDING_CREW_MINT_PRICE = _presalePrice;
+        CREW_MINT_PRICE = _salePrice;
 
         currentTokenId.increment();
     }
@@ -175,6 +179,20 @@ contract NexusVoyagers is ERC721URIStorage, IERC2981, Ownable, ReentrancyGuard {
             string(
                 abi.encodePacked(BASE_URI, "/", tokenId.toString(), ".json")
             );
+    }
+
+    /**
+     * @param _price Cost to mint token during presale
+     */
+    function setPresalePrice(uint256 _price) external onlyOwner {
+        FOUNDING_CREW_MINT_PRICE = _price;
+    }
+
+    /**
+     * @param _price Cost to mint token during general sale
+     */
+    function setSalePrice(uint256 _price) external onlyOwner {
+        CREW_MINT_PRICE = _price;
     }
 
     /**

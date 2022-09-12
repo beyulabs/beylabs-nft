@@ -299,6 +299,99 @@ task("withdrawal:get")
     }
   });
 
+task("price:get")
+  .setDescription("Displays current sale & presale prices")
+  .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const connectedContract = await getConnectedContract(hre);
+
+    if (connectedContract != null) {
+      try {
+        console.log(
+          `Current presale price: ${await connectedContract.FOUNDING_CREW_MINT_PRICE()} wei`
+        );
+        console.log(
+          `Current sale price: ${await connectedContract.CREW_MINT_PRICE()} wei`
+        );
+      } catch (error) {
+        console.error("Error!", error);
+      }
+    }
+  });
+
+task("price:set")
+  .addParam("price")
+  .addParam("phase")
+  .setDescription("Sets sale or presale price(s)")
+  .setAction(
+    async (
+      taskArgs: {
+        price: string;
+        phase: "presale" | "general";
+      },
+      hre: HardhatRuntimeEnvironment
+    ) => {
+      const connectedContract = await getConnectedContract(hre);
+
+      if (connectedContract != null) {
+        try {
+          console.log(
+            `Setting ${taskArgs.phase} price to '${taskArgs.price}' wei`
+          );
+
+          if (taskArgs.phase === "general") {
+            await connectedContract.setSalePrice(
+              BigNumber.from(taskArgs.price)
+            );
+          } else {
+            await connectedContract.setPresalePrice(
+              BigNumber.from(taskArgs.price)
+            );
+          }
+        } catch (error) {
+          console.error("Error!", error);
+        }
+      }
+    }
+  );
+
+task("mint")
+  .addParam("price")
+  .addParam("phase")
+  .setDescription("Mint presale or general sale token")
+  .setAction(
+    async (
+      taskArgs: {
+        price: string;
+        phase: "presale" | "general";
+      },
+      hre: HardhatRuntimeEnvironment
+    ) => {
+      const connectedContract = await getConnectedContract(hre);
+
+      if (connectedContract != null) {
+        try {
+          console.log("Minting token");
+
+          if (taskArgs.phase === "general") {
+            const txn = await connectedContract.mint(1, {
+              value: taskArgs.price,
+            });
+
+            console.log(txn);
+          } else {
+            const txn = await connectedContract.preMint(1, {
+              value: taskArgs.price,
+            });
+
+            console.log(txn);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    }
+  );
+
 const config: HardhatUserConfig = {
   solidity: "0.8.4",
   networks: {
