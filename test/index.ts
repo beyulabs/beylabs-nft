@@ -350,7 +350,7 @@ describe("NexusVoyagers", function () {
     );
   });
 
-  it.skip("non-owner cannot update presale price", async function () {
+  it("non-owner cannot update presale price", async function () {
     const [owner, addr1] = await ethers.getSigners();
     const currentPrice = await this.nexus.FOUNDING_CREW_MINT_PRICE();
 
@@ -358,14 +358,14 @@ describe("NexusVoyagers", function () {
     expect(ethers.utils.formatEther(currentPrice)).to.be.equal("0.07");
 
     await expectRevert.unspecified(
-      await this.nexus
+      this.nexus
         .connect(addr1)
         .setPresalePrice(BigNumber.from("1000000000000000000")),
       "Ownable: caller is not the owner"
     );
   });
 
-  it.skip("non-owner cannot update sale price", async function () {
+  it("non-owner cannot update sale price", async function () {
     const [owner, addr1] = await ethers.getSigners();
     const currentPrice = await this.nexus.CREW_MINT_PRICE();
 
@@ -373,7 +373,7 @@ describe("NexusVoyagers", function () {
     expect(ethers.utils.formatEther(currentPrice)).to.be.equal("0.09");
 
     await expectRevert.unspecified(
-      await this.nexus
+      this.nexus
         .connect(addr1)
         .setSalePrice(BigNumber.from("1000000000000000000")),
       "Ownable: caller is not the owner"
